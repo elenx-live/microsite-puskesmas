@@ -12,6 +12,7 @@
     Send
   } from 'lucide-svelte';
   import type { MicrositeEntity, BackgroundAnimationType } from '../../../shared/types/index.js';
+  import { MICROSITE_THEMES } from '../../../shared/themes/micrositeThemes.js';
   import { generateSmartShareUrl } from '../../../shared/utils/shareUtils.js';
   import ArtisticBackgroundCanvas from '../components/ArtisticBackgroundCanvas.svelte';
   import MicrositeContentList from '../components/MicrositeContentList.svelte';
@@ -93,6 +94,18 @@
       btn: 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold'
     }
   };
+
+  // 20 tema baru (registry): gaya token penuh. Kartu/teks sudah memakai
+  // var(--color-*) dari wrapper halaman; gradasi & tombol mengikuti primer.
+  // String kelas di bawah literal di source agar Tailwind tetap men-generate.
+  const newThemeStyle = {
+    bg: 'bg-gradient-to-b from-[var(--color-primary)]/30 to-[var(--color-bg)]',
+    card: 'bg-[var(--color-card)]/90 border-[var(--color-border)]',
+    text: 'text-[var(--color-text)]',
+    subText: 'text-[var(--color-muted-foreground)]',
+    btn: 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)]'
+  };
+  for (const t of MICROSITE_THEMES) themeStyles[t.id] = newThemeStyle;
 
   const currentStyle = themeStyles[theme] || themeStyles.emerald;
 

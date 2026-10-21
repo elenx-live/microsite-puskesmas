@@ -14,6 +14,10 @@
   } from 'lucide-svelte';
   import { routerState } from '../../app/router.svelte.js';
   import { micrositeService } from '../../shared/services/micrositeService.js';
+  import {
+    getMicrositeTheme,
+    micrositeThemeCssVars
+  } from '../../shared/themes/micrositeThemes.js';
   import { siteSettingsService } from '../../shared/services/siteSettingsService.js';
   import { updateClientMetaTags } from '../../shared/utils/metaSync.js';
   import type {
@@ -38,6 +42,11 @@
   // Aplikasi mandiri tanpa login: pratinjau draf hanya lewat ?preview=true.
   const isPreviewMode = $derived(routerState.query['preview'] === 'true');
 
+  // Tema visual: ?theme=<id> (pratinjau sementara, tanpa mengubah data)
+  // mengalahkan tema tersimpan; tema tersimpan yang termasuk 20 tema baru
+  // juga diterapkan. Nama lama (mis. 'emerald') tidak ada di registry maka
+  // tidak ada override — halaman merender persis seperti sebelumnya.
+  const previewThemeId = $derived(routerState.query['theme'] || '');
   let microsite = $state<MicrositeEntity | null>(null);
   let loading = $state(true);
   let notFound = $state(false);
@@ -59,6 +68,15 @@
 
   // Guard to ensure page view is recorded only once per visit
   let viewRecordedForSlug: string | null = null;
+
+  // Token tema aktif (undefined = pakai token default :root seperti biasa).
+  // Diterapkan sebagai atribut style pada wrapper halaman — variabel CSS
+  // mengalir ke semua template; wrapper tanpa transform/filter sehingga
+  // elemen fixed (banner, modal QR) tidak terganggu dan layout tak berubah.
+  const activeTheme = $derived(
+    getMicrositeTheme(previewThemeId || microsite?.themeCustomization?.theme)
+  );
+  const themeVars = $derived(activeTheme ? micrositeThemeCssVars(activeTheme) : undefined);
 
   $effect(() => {
     const currentSlug = slug;
@@ -193,6 +211,9 @@
   }
 </script>
 
+<!-- Wrapper tema: menerapkan token --color-* tema aktif ke seluruh halaman.
+     Tanpa tema aktif (undefined) tidak ada perubahan apa pun. -->
+<div style={themeVars}>
 {#if loading}
   <div class="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 text-[var(--color-muted-foreground)]">
     <HeartPulse class="w-10 h-10 text-[var(--color-primary)] animate-pulse mb-3" />
@@ -384,3 +405,4 @@
     {/if}
   </div>
 {/if}
+</div>

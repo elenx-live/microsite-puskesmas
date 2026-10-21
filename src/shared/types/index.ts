@@ -912,7 +912,7 @@ export interface MicrositeHeaderConfig {
 }
 
 export interface MicrositeThemeCustomization {
-  theme: 'fresh_mint' | 'sehat_hijau' | 'sage_wellness' | 'teal_health' | 'aqua_sehat' | 'government_health' | 'emerald' | 'sky' | 'rose' | 'neutral' | 'light' | 'dark' | 'custom' | string;
+  theme: 'fresh_mint' | 'sehat_hijau' | 'sage_wellness' | 'teal_health' | 'aqua_sehat' | 'government_health' | 'emerald' | 'sky' | 'rose' | 'neutral' | 'light' | 'dark' | 'custom' | 'rimba-pinus' | 'sawah-pagi' | 'laut-tenang' | 'dirgantara' | 'langit-cerah' | 'nila-malam' | 'senja-jingga' | 'bata-nusantara' | 'kunyit-emas' | 'delima-merah' | 'sakura-mekar' | 'anggrek-ungu' | 'lavender-senja' | 'toska-pantai' | 'magenta-fajar' | 'batu-karang' | 'perak-slate' | 'kayu-jati' | 'zaitun-tua' | 'susu-rempah' | string;
   template?: HomepageTemplateType;
   backgroundAnimation?: BackgroundAnimationType;
   backgroundType?: MicrositeBackgroundType;

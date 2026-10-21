@@ -222,12 +222,12 @@
 {:else if isDraftUnpublished && microsite}
   <!-- If portal is in draft/inactive state and accessed by normal visitors -->
   <div class="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 text-center space-y-6">
-    <div class="p-4 rounded-3xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+    <div class="p-4 rounded-3xl bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20">
       <AlertTriangle class="w-12 h-12" />
     </div>
     <h1 class="text-2xl font-light text-[var(--color-text)]">Portal Belum Dipublikasikan</h1>
     <p class="text-[var(--color-muted-foreground)] text-xs max-w-sm leading-relaxed">
-      Portal <span class="font-semibold text-[var(--color-text)]">"{microsite.name}"</span> saat ini masih dalam status <span class="font-mono text-amber-400 font-bold">{microsite.status.toUpperCase()}</span> atau nonaktif sementara oleh pengelola Puskesmas.
+      Portal <span class="font-semibold text-[var(--color-text)]">"{microsite.name}"</span> saat ini masih dalam status <span class="font-mono text-[var(--color-warning)] font-bold">{microsite.status.toUpperCase()}</span> atau nonaktif sementara oleh pengelola Puskesmas.
     </p>
     <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
       <a
@@ -248,7 +248,7 @@
   </div>
 {:else if notFound || !microsite}
   <div class="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 text-center space-y-6">
-    <div class="p-4 rounded-3xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+    <div class="p-4 rounded-3xl bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20">
       <AlertTriangle class="w-12 h-12" />
     </div>
     <h1 class="text-2xl font-light text-[var(--color-text)]">Portal Tidak Ditemukan</h1>
@@ -304,7 +304,7 @@
             autofocus
           />
           {#if passwordError}
-            <p class="text-[11px] text-rose-500 font-medium">Kata sandi yang Anda masukkan salah. Silakan coba lagi.</p>
+            <p class="text-[11px] text-[var(--color-danger)] font-medium">Kata sandi yang Anda masukkan salah. Silakan coba lagi.</p>
           {/if}
         </div>
 
@@ -382,7 +382,7 @@
                 class="flex-1 py-2.5 rounded-xl bg-[var(--color-surface)] hover:bg-zinc-700 text-[var(--color-text)] text-xs font-bold flex items-center justify-center gap-1.5 transition"
               >
                 {#if copiedModalUrl}
-                  <Check class="w-3.5 h-3.5 text-emerald-400" />
+                  <Check class="w-3.5 h-3.5 text-[var(--color-success)]" />
                 {:else}
                   <Copy class="w-3.5 h-3.5" />
                 {/if}

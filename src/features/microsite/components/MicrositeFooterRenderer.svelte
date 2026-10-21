@@ -252,8 +252,8 @@
           title="Bagikan Tautan Portal Ini"
         >
           {#if isCopied}
-            <Check class="w-3.5 h-3.5 text-emerald-400" />
-            <span class="font-semibold text-emerald-400">Tersalin!</span>
+            <Check class="w-3.5 h-3.5 text-[var(--color-success)]" />
+            <span class="font-semibold text-[var(--color-success)]">Tersalin!</span>
           {:else}
             <Share2 class="w-3.5 h-3.5 text-[var(--color-primary)]" />
             <span class="font-semibold">Bagikan</span>
@@ -292,7 +292,7 @@
   {:else if style === 'government_formal'}
     <div
       in:fade={{ duration: 400 }}
-      class="mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 border border-emerald-500/20 backdrop-blur-sm shadow-xl space-y-4"
+      class="mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 border border-[var(--color-primary)]/20 backdrop-blur-sm shadow-xl space-y-4"
     >
       <div class="flex items-center justify-between border-b border-[var(--color-border)] pb-3.5">
         <div class="flex items-center gap-2.5">
@@ -301,24 +301,24 @@
               src={microsite.logoUrl}
               alt="Logo"
               referrerPolicy="no-referrer"
-              class="w-8 h-8 rounded-lg object-cover bg-white p-0.5 border border-emerald-500/30"
+              class="w-8 h-8 rounded-lg object-cover bg-white p-0.5 border border-[var(--color-primary)]/30"
             />
           {:else}
-            <div class="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center">
               <HeartPulse class="w-4 h-4" />
             </div>
           {/if}
           <div>
             <p class="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
               <span>{microsite.name || 'UPTD Puskesmas'}</span>
-              <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 inline" />
+              <ShieldCheck class="w-3.5 h-3.5 text-[var(--color-primary)] inline" />
             </p>
             <p class="text-[10px] text-[var(--color-muted-foreground)]">Pemerintah Kabupaten / Kota • Dinas Kesehatan</p>
           </div>
         </div>
 
         <div class="hidden sm:flex items-center gap-1">
-          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
             RESMI
           </span>
         </div>
@@ -330,7 +330,7 @@
         <div class="p-3 rounded-2xl bg-[var(--color-bg)]/60 border border-[var(--color-border)] grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           {#if microsite.phone}
             <div class="flex items-center gap-2 text-[var(--color-muted-foreground)]">
-              <Phone class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <Phone class="w-3.5 h-3.5 text-[var(--color-primary)] shrink-0" />
               <span class="truncate">{microsite.phone}</span>
             </div>
           {/if}
@@ -359,7 +359,7 @@
       {@render footerLinks()}
 
       <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-card)]/90 border border-[var(--color-border)] backdrop-blur-sm shadow-lg">
-        <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+        <div class="w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center shrink-0">
           <HeartPulse class="w-3.5 h-3.5" />
         </div>
         <div class="text-left pr-1">
@@ -388,7 +388,7 @@
               class="p-1.5 rounded-full hover:bg-[var(--color-bg)] text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
               title="Bagikan"
             >
-              {#if isCopied}<Check class="w-3.5 h-3.5 text-emerald-400" />{:else}<Share2 class="w-3.5 h-3.5" />{/if}
+              {#if isCopied}<Check class="w-3.5 h-3.5 text-[var(--color-success)]" />{:else}<Share2 class="w-3.5 h-3.5" />{/if}
             </button>
           {/if}
         </div>
@@ -409,7 +409,7 @@
 
       <div class="p-2 rounded-2xl bg-[var(--color-card)]/95 border border-[var(--color-border)] backdrop-blur-sm shadow-2xl flex items-center justify-between gap-2 max-w-sm mx-auto">
         <div class="flex items-center gap-2 pl-2">
-          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <div class="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
           <span class="text-[11px] font-bold text-[var(--color-text)]">Portal Siap Diakses</span>
         </div>
 
@@ -433,7 +433,7 @@
               class="p-2 rounded-xl bg-[var(--color-bg)] text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--color-card)] transition border border-[var(--color-border)]"
               title="Bagikan Tautan"
             >
-              {#if isCopied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
+              {#if isCopied}<Check class="w-4 h-4 text-[var(--color-success)]" />{:else}<Share2 class="w-4 h-4" />{/if}
             </button>
           {/if}
 
@@ -441,7 +441,7 @@
             <button
               type="button"
               onclick={handleScrollToTop}
-              class="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-md"
+              class="p-2 rounded-xl bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] transition shadow-md"
               title="Kembali ke Atas"
             aria-label="Kembali ke Atas"
             >

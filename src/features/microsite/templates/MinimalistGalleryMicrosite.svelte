@@ -71,7 +71,7 @@
         class="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition flex items-center gap-1"
         title="Salin Tautan"
       >
-        {#if copied}<Check class="w-3.5 h-3.5 text-emerald-500" />{:else}<Share2 class="w-3.5 h-3.5" />{/if}
+        {#if copied}<Check class="w-3.5 h-3.5 text-[var(--color-success)]" />{:else}<Share2 class="w-3.5 h-3.5" />{/if}
         <span class="hidden sm:inline">SHARE</span>
       </button>
       <button

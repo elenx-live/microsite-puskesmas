@@ -179,7 +179,7 @@
                     <Globe class="w-5 h-5" />
                   </div>
                   {#if m.passwordProtected}
-                    <span class="inline-flex items-center gap-1 text-[10px] font-mono bg-amber-500/10 text-amber-500 px-2.5 py-0.5 rounded-full font-semibold">
+                    <span class="inline-flex items-center gap-1 text-[10px] font-mono bg-[var(--color-warning)]/10 text-[var(--color-warning)] px-2.5 py-0.5 rounded-full font-semibold">
                       <Lock class="w-3 h-3" />
                       Terproteksi Sandi
                     </span>

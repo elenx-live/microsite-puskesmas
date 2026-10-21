@@ -82,11 +82,11 @@
         src={microsite.logoUrl}
         alt={microsite.name}
         referrerPolicy="no-referrer"
-        class={`${logoSizeClass(size)} ${avatarShapeClass} object-cover border-2 border-emerald-400/40 bg-white p-1.5 shadow-xl transition duration-300 hover:scale-105`}
+        class={`${logoSizeClass(size)} ${avatarShapeClass} object-cover border-2 border-[var(--color-primary)]/40 bg-white p-1.5 shadow-xl transition duration-300 hover:scale-105`}
       />
     {:else}
       <div
-        class={`${logoSizeClass(size)} ${avatarShapeClass} bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 border-2 border-amber-400/50 text-amber-300 flex items-center justify-center font-bold shadow-xl shadow-emerald-950/40`}
+        class={`${logoSizeClass(size)} ${avatarShapeClass} bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-primary)] border-2 border-[var(--color-accent)]/50 text-[var(--color-primary-foreground)] flex items-center justify-center font-bold shadow-xl`}
       >
         <HeartPulse class="w-8 h-8 animate-pulse" />
       </div>
@@ -94,7 +94,7 @@
 
     {#if showVerified}
       <div
-        class="absolute -bottom-1 -right-1 p-1 rounded-full bg-emerald-500 text-white shadow-md border-2 border-[var(--color-card)]"
+        class="absolute -bottom-1 -right-1 p-1 rounded-full bg-[var(--color-primary)] text-white shadow-md border-2 border-[var(--color-card)]"
         title="Layanan Resmi Terverifikasi"
       >
         <CheckCircle2 class="w-3.5 h-3.5" />
@@ -123,7 +123,7 @@
       </div>
     {:else}
       <div
-        class={`w-full ${height === 'compact' ? 'h-24' : 'h-32'} bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 relative overflow-hidden`}
+        class={`w-full ${height === 'compact' ? 'h-24' : 'h-32'} bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-primary)] relative overflow-hidden`}
       >
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent)]" />
         <div class="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-[var(--color-card)] to-transparent" />
@@ -141,7 +141,7 @@
 
       <div class="space-y-1.5">
         {#if showCategoryBadge}
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-400 text-[10px] font-bold tracking-wider uppercase">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 text-[var(--color-accent)] text-[10px] font-bold tracking-wider uppercase">
             <Award class="w-3 h-3" />
             <span>{categoryText}</span>
           </div>
@@ -159,12 +159,12 @@
 
       <div class="pt-2 flex items-center justify-center gap-4 text-[11px] text-[var(--color-muted-foreground)] border-t border-[var(--color-border)]/50">
         <span class="flex items-center gap-1">
-          <ShieldCheck class="w-3.5 h-3.5 text-emerald-400" />
+          <ShieldCheck class="w-3.5 h-3.5 text-[var(--color-primary)]" />
           <span>Puskesmas Terakreditasi Paripurna</span>
         </span>
         <span>•</span>
         <span class="flex items-center gap-1">
-          <Clock class="w-3.5 h-3.5 text-amber-400" />
+          <Clock class="w-3.5 h-3.5 text-[var(--color-accent)]" />
           <span>Akses Cepat 24 Jam</span>
         </span>
       </div>
@@ -178,7 +178,7 @@
     {@render logo('md')}
     <div class="flex-1 min-w-0 space-y-1">
       {#if showCategoryBadge}
-        <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
+        <span class="inline-block px-2.5 py-0.5 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-[9px] font-bold uppercase tracking-wider">
           {categoryText}
         </span>
       {/if}
@@ -195,16 +195,16 @@
 {:else if style === 'glassmorphism_card'}
   <div
     in:fade={{ duration: 400 }}
-    class="relative p-7 sm:p-8 rounded-3xl bg-gradient-to-b from-[var(--color-card)]/80 via-[var(--color-card)]/60 to-[var(--color-card)]/80 backdrop-blur-sm border border-emerald-500/30 shadow-[0_8px_32px_rgba(16,185,129,0.12)] text-center space-y-4 overflow-hidden"
+    class="relative p-7 sm:p-8 rounded-3xl bg-gradient-to-b from-[var(--color-card)]/80 via-[var(--color-card)]/60 to-[var(--color-card)]/80 backdrop-blur-sm border border-[var(--color-primary)]/30 shadow-[0_8px_32px_color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-center space-y-4 overflow-hidden"
   >
-    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500" />
+    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-primary)]" />
 
     {@render logo('lg')}
 
     <div class="space-y-1.5">
       {#if showCategoryBadge}
-        <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-400 text-[10px] font-bold tracking-wider uppercase">
-          <Sparkles class="w-3 h-3 text-amber-400" />
+        <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 text-[var(--color-primary)] text-[10px] font-bold tracking-wider uppercase">
+          <Sparkles class="w-3 h-3 text-[var(--color-accent)]" />
           <span>{categoryText}</span>
         </div>
       {/if}
@@ -278,7 +278,7 @@
         {@render logo('sm')}
         <div>
           {#if showCategoryBadge}
-            <span class="text-[9px] font-bold uppercase tracking-wider text-amber-400 block">
+            <span class="text-[9px] font-bold uppercase tracking-wider text-[var(--color-accent)] block">
               {categoryText}
             </span>
           {/if}
@@ -304,7 +304,7 @@
 
     <div class="space-y-1.5">
       {#if showCategoryBadge}
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 text-[var(--color-primary)] text-[10px] font-bold tracking-widest uppercase">
           <Award class="w-3 h-3" />
           <span>{categoryText}</span>
         </div>
@@ -333,12 +333,12 @@
 
     <div class="pt-2 flex items-center justify-center gap-4 text-[11px] text-[var(--color-muted-foreground)]">
       <span class="flex items-center gap-1">
-        <ShieldCheck class="w-3.5 h-3.5 text-emerald-400" />
+        <ShieldCheck class="w-3.5 h-3.5 text-[var(--color-primary)]" />
         <span>Layanan Terverifikasi</span>
       </span>
       <span>•</span>
       <span class="flex items-center gap-1">
-        <Clock class="w-3.5 h-3.5 text-amber-400" />
+        <Clock class="w-3.5 h-3.5 text-[var(--color-accent)]" />
         <span>Akses 24 Jam</span>
       </span>
     </div>

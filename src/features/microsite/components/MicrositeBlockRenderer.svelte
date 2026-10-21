@@ -396,12 +396,12 @@
       in:fly={anim}
       class={`group relative p-3.5 sm:p-4 rounded-2xl border backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md ${
         isFeatured
-          ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-amber-500/20 border-amber-400/60 shadow-amber-500/10 hover:border-amber-400 scale-[1.02] ring-1 ring-amber-400/30'
+          ? 'bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-accent)]/20 border-[var(--color-accent)]/60 shadow-[var(--color-accent)]/10 hover:border-[var(--color-accent)] scale-[1.02] ring-1 ring-[var(--color-accent)]/30'
           : 'bg-[var(--color-card)]/85 hover:bg-[var(--color-card)] border-[var(--color-border)] hover:border-[var(--color-primary)]/50'
       }`}
     >
       {#if isFeatured}
-        <div class="absolute -top-2.5 right-4 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md">
+        <div class="absolute -top-2.5 right-4 px-2 py-0.5 rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 text-[var(--color-accent-foreground)] text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md">
           <Flame class="w-2.5 h-2.5 fill-current" />
           <span>{block.badgeText || 'UNGGULAN'}</span>
         </div>
@@ -424,7 +424,7 @@
             <MicrositeIcon iconName={block.icon} className="w-4 h-4" />
           </div>
         {:else}
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-[var(--color-border)] text-xs font-bold text-[var(--color-text)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-accent)]/20 border border-[var(--color-border)] text-xs font-bold text-[var(--color-text)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
             {index + 1}
           </div>
         {/if}

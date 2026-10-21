@@ -62,12 +62,12 @@
 
   <ArtisticBackgroundCanvas type={activeAnimation} intensity="medium" />
 
-  <div class="absolute inset-0 bg-[linear-gradient(to_right,#06b6d40a_1px,transparent_1px),linear-gradient(to_bottom,#06b6d40a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-10" />
+  <div class="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--color-primary)_4%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_srgb,var(--color-primary)_4%,transparent)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
     <a
       href="/"
-      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-[11px] font-mono font-bold text-cyan-400 backdrop-blur-sm transition shadow-md"
+      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/70 border border-[var(--color-primary)]/40 text-[11px] font-mono font-bold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
     >
       <ArrowLeft class="w-3.5 h-3.5" />
       <span>[SYS: BACK_TO_ROOT]</span>
@@ -78,21 +78,21 @@
         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${microsite.name}\n${window.location.href}`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
+        class="px-3 py-1.5 rounded-lg bg-[var(--color-primary)]/70 hover:bg-[var(--color-primary)]/85 border border-[var(--color-primary)]/40 text-[var(--color-primary-foreground)] text-[11px] font-mono font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
       >
         <Send class="w-3.5 h-3.5" />
         <span>TRANSMIT_WA</span>
       </a>
       <button
         onclick={onCopyLink}
-        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-sm transition"
+        class="p-2 rounded-lg bg-[var(--color-primary)]/70 hover:bg-[var(--color-primary)]/85 border border-[var(--color-primary)]/40 text-[var(--color-primary-foreground)] backdrop-blur-sm transition"
         title="Copy Endpoint URL"
       >
-        {#if copied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
+        {#if copied}<Check class="w-4 h-4 text-[var(--color-success)]" />{:else}<Share2 class="w-4 h-4" />{/if}
       </button>
       <button
         onclick={onOpenQR}
-        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-sm transition"
+        class="p-2 rounded-lg bg-[var(--color-primary)]/70 hover:bg-[var(--color-primary)]/85 border border-[var(--color-primary)]/40 text-[var(--color-primary-foreground)] backdrop-blur-sm transition"
         title="Scan Matrix QR"
             aria-label="Scan Matrix QR"
       >
@@ -111,7 +111,7 @@
     />
 
     <div class="space-y-2.5">
-      <div class="flex items-center justify-between px-1 font-mono text-[10px] text-cyan-400 uppercase tracking-wider">
+      <div class="flex items-center justify-between px-1 font-mono text-[10px] text-[var(--color-primary)] uppercase tracking-wider">
         <span>[AVAILABLE_ACTION_ENDPOINTS]</span>
         <span>COUNT: {(microsite.blocks?.length || microsite.links?.length || 0)}</span>
       </div>
@@ -126,10 +126,10 @@
     {#if microsite.phone || microsite.email || microsite.address}
       <div
         in:fade={{ duration: 400, delay: 200 }}
-        class="p-5 rounded-2xl bg-[var(--color-card)]/85 backdrop-blur-sm border border-cyan-500/30 space-y-3"
+        class="p-5 rounded-2xl bg-[var(--color-card)]/85 backdrop-blur-sm border border-[var(--color-primary)]/30 space-y-3"
       >
-        <div class="font-mono text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <Radio class="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+        <div class="font-mono text-[10px] text-[var(--color-primary)] font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <Radio class="w-3.5 h-3.5 text-[var(--color-primary)] animate-pulse" />
           <span>[COMMS_&_COORDINATES]</span>
         </div>
 
@@ -137,11 +137,11 @@
           {#if microsite.phone}
             <a
               href={`tel:${microsite.phone.replace(/[^0-9+]/g, '')}`}
-              class="p-2.5 rounded-lg bg-cyan-950/30 hover:bg-cyan-950/60 border border-cyan-500/30 flex items-center gap-2.5 transition text-[var(--color-text)]"
+              class="p-2.5 rounded-lg bg-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/60 border border-[var(--color-primary)]/30 flex items-center gap-2.5 transition text-[var(--color-text)]"
             >
-              <Phone class="w-4 h-4 text-cyan-400 shrink-0" />
+              <Phone class="w-4 h-4 text-[var(--color-primary)] shrink-0" />
               <div class="min-w-0 flex-1 truncate">
-                <p class="text-[9px] text-cyan-400">TEL_LINE</p>
+                <p class="text-[9px] text-[var(--color-primary)]">TEL_LINE</p>
                 <p class="font-bold truncate">{microsite.phone}</p>
               </div>
             </a>
@@ -150,11 +150,11 @@
           {#if microsite.email}
             <a
               href={`mailto:${microsite.email}`}
-              class="p-2.5 rounded-lg bg-cyan-950/30 hover:bg-cyan-950/60 border border-cyan-500/30 flex items-center gap-2.5 transition text-[var(--color-text)]"
+              class="p-2.5 rounded-lg bg-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/60 border border-[var(--color-primary)]/30 flex items-center gap-2.5 transition text-[var(--color-text)]"
             >
-              <Mail class="w-4 h-4 text-cyan-400 shrink-0" />
+              <Mail class="w-4 h-4 text-[var(--color-primary)] shrink-0" />
               <div class="min-w-0 flex-1 truncate">
-                <p class="text-[9px] text-cyan-400">SMTP_MAIL</p>
+                <p class="text-[9px] text-[var(--color-primary)]">SMTP_MAIL</p>
                 <p class="font-bold truncate">{microsite.email}</p>
               </div>
             </a>
@@ -162,15 +162,15 @@
         </div>
 
         {#if microsite.address}
-          <div class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/30 text-xs font-mono">
-            <p class="text-[9px] text-cyan-400">PHYSICAL_GEO_LOCATION</p>
+          <div class="p-3 rounded-lg bg-[var(--color-primary)]/30 border border-[var(--color-primary)]/30 text-xs font-mono">
+            <p class="text-[9px] text-[var(--color-primary)]">PHYSICAL_GEO_LOCATION</p>
             <p class="text-xs text-[var(--color-text)] mt-0.5">{microsite.address}</p>
             {#if microsite.mapUrl}
               <a
                 href={microsite.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded bg-cyan-600 hover:bg-cyan-500 text-black text-[10px] font-bold transition"
+                class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded bg-cyan-600 hover:bg-[var(--color-primary)] text-black text-[10px] font-bold transition"
               >
                 <Globe class="w-3 h-3" />
                 <span>LAUNCH_MAPS_GPS</span>

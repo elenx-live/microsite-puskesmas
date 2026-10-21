@@ -65,7 +65,7 @@
 
   <ArtisticBackgroundCanvas type={activeAnimation} intensity="medium" />
 
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-emerald-500/15 via-amber-500/10 to-transparent blur-xl pointer-events-none -z-10" />
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-[var(--color-primary)]/15 via-[var(--color-accent)]/10 to-transparent blur-xl pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
     <a
@@ -86,7 +86,7 @@
         })}`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3.5 py-2 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
+        class="px-3.5 py-2 rounded-2xl bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
         title="Bagikan ke WhatsApp dengan Pratinjau Gambar"
       >
         <Send class="w-3.5 h-3.5" />
@@ -97,7 +97,7 @@
         class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] backdrop-blur-sm transition shadow-sm"
         title="Salin Tautan"
       >
-        {#if copied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
+        {#if copied}<Check class="w-4 h-4 text-[var(--color-success)]" />{:else}<Share2 class="w-4 h-4" />{/if}
       </button>
       <button
         onclick={onOpenQR}
@@ -105,7 +105,7 @@
         title="Tampilkan QR Code"
             aria-label="Tampilkan QR Code"
       >
-        <QrCode class="w-4 h-4 text-amber-400" />
+        <QrCode class="w-4 h-4 text-[var(--color-accent)]" />
       </button>
     </div>
   </div>
@@ -122,7 +122,7 @@
     <div class="space-y-3">
       <div class="flex items-center justify-between px-2">
         <h3 class="text-xs font-bold uppercase tracking-widest text-[var(--color-muted-foreground)] flex items-center gap-1.5">
-          <Sparkles class="w-3.5 h-3.5 text-amber-400" />
+          <Sparkles class="w-3.5 h-3.5 text-[var(--color-accent)]" />
           <span>Menu & Tautan Resmi</span>
         </h3>
         <span class="text-[10px] font-mono text-[var(--color-muted-foreground)]">
@@ -144,10 +144,10 @@
       >
         <div class="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
           <h4 class="text-xs font-bold uppercase tracking-widest text-[var(--color-text)] flex items-center gap-2">
-            <Building2 class="w-4 h-4 text-emerald-400" />
+            <Building2 class="w-4 h-4 text-[var(--color-primary)]" />
             <span>Posko & Informasi Kontak</span>
           </h4>
-          <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">
+          <span class="px-2 py-0.5 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] text-[10px] font-bold">
             Aktif
           </span>
         </div>
@@ -158,7 +158,7 @@
               href={`tel:${microsite.phone.replace(/[^0-9+]/g, '')}`}
               class="p-3 rounded-2xl bg-[var(--color-bg)]/60 hover:bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center gap-3 transition group"
             >
-              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div class="w-8 h-8 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Phone class="w-4 h-4" />
               </div>
               <div class="min-w-0 flex-1">
@@ -186,7 +186,7 @@
 
         {#if microsite.address}
           <div class="p-3.5 rounded-2xl bg-[var(--color-bg)]/60 border border-[var(--color-border)] flex items-start gap-3">
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
               <MapPin class="w-4 h-4" />
             </div>
             <div class="flex-1 min-w-0">
@@ -197,7 +197,7 @@
                   href={microsite.mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-md transition"
+                  class="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-xl bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] text-[11px] font-bold shadow-md transition"
                 >
                   <Globe class="w-3.5 h-3.5" />
                   <span>Petunjuk Arah Google Maps</span>

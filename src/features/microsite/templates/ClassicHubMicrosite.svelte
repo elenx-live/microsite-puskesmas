@@ -160,7 +160,7 @@
         href={whatsappShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3 py-2 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-600/20 text-xs font-semibold flex items-center gap-1.5 transition"
+        class="px-3 py-2 rounded-2xl bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 text-xs font-semibold flex items-center gap-1.5 transition"
         title="Bagikan ke WhatsApp dengan Pratinjau Gambar"
       >
         <Send class="w-3.5 h-3.5" />

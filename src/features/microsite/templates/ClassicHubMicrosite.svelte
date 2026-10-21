@@ -198,7 +198,7 @@
 
     <!-- Contact and Operational Information -->
     {#if microsite.phone || microsite.email || microsite.address}
-      <div class={`p-6 border ${currentStyle.card} rounded-3xl space-y-4 backdrop-blur-md`}>
+      <div class={`p-6 border ${currentStyle.card} rounded-3xl space-y-4 backdrop-blur-sm`}>
         <h4 class={`text-xs font-bold uppercase tracking-widest text-center ${currentStyle.text}`}>Hubungi Kami</h4>
 
         <div class="space-y-3 text-xs">

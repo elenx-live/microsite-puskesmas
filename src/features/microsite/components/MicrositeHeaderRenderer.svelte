@@ -106,7 +106,7 @@
 {#if style === 'banner_hero'}
   <div
     in:fade={{ duration: 400 }}
-    class="relative rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] shadow-2xl overflow-hidden"
+    class="relative rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] shadow-2xl overflow-hidden"
   >
     {#if bannerImg}
       <div class={`relative w-full ${bannerHeightClass} overflow-hidden bg-slate-900`}>
@@ -173,7 +173,7 @@
 {:else if style === 'compact_inline'}
   <div
     in:fade={{ duration: 400 }}
-    class="p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] shadow-xl flex items-center gap-4 sm:gap-5"
+    class="p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] shadow-xl flex items-center gap-4 sm:gap-5"
   >
     {@render logo('md')}
     <div class="flex-1 min-w-0 space-y-1">
@@ -195,7 +195,7 @@
 {:else if style === 'glassmorphism_card'}
   <div
     in:fade={{ duration: 400 }}
-    class="relative p-7 sm:p-8 rounded-3xl bg-gradient-to-b from-[var(--color-card)]/80 via-[var(--color-card)]/60 to-[var(--color-card)]/80 backdrop-blur-2xl border border-emerald-500/30 shadow-[0_8px_32px_rgba(16,185,129,0.12)] text-center space-y-4 overflow-hidden"
+    class="relative p-7 sm:p-8 rounded-3xl bg-gradient-to-b from-[var(--color-card)]/80 via-[var(--color-card)]/60 to-[var(--color-card)]/80 backdrop-blur-sm border border-emerald-500/30 shadow-[0_8px_32px_rgba(16,185,129,0.12)] text-center space-y-4 overflow-hidden"
   >
     <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500" />
 
@@ -257,7 +257,7 @@
 {:else if style === 'split_cover'}
   <div
     in:fade={{ duration: 400 }}
-    class="rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] shadow-xl overflow-hidden grid grid-cols-1 sm:grid-cols-12 gap-0"
+    class="rounded-3xl bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] shadow-xl overflow-hidden grid grid-cols-1 sm:grid-cols-12 gap-0"
   >
     {#if bannerImg}
       <div class="sm:col-span-5 h-44 sm:h-full relative bg-slate-900">
@@ -298,7 +298,7 @@
   <!-- DEFAULT / AVATAR TOP -->
   <div
     in:fade={{ duration: 400 }}
-    class="p-7 sm:p-8 rounded-3xl bg-[var(--color-card)]/85 backdrop-blur-xl border border-[var(--color-border)] shadow-2xl text-center space-y-4"
+    class="p-7 sm:p-8 rounded-3xl bg-[var(--color-card)]/85 backdrop-blur-sm border border-[var(--color-border)] shadow-2xl text-center space-y-4"
   >
     {@render logo('lg')}
 

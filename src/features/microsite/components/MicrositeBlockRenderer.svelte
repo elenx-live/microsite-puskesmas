@@ -98,7 +98,7 @@
   {:else if block.type === 'text'}
     <div
       in:fly={anim}
-      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-md shadow-sm space-y-1.5 text-left"
+      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-sm shadow-sm space-y-1.5 text-left"
     >
       {#if block.title}
         <h4 class="text-xs sm:text-sm font-bold text-[var(--color-text)] flex items-center gap-1.5">
@@ -115,7 +115,7 @@
   {:else if block.type === 'announcement'}
     <div
       in:scale={{ duration: 300, delay: index * 30, start: 0.98 }}
-      class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 border border-amber-500/40 backdrop-blur-md shadow-md space-y-2 relative overflow-hidden"
+      class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 border border-amber-500/40 backdrop-blur-sm shadow-md space-y-2 relative overflow-hidden"
     >
       <div class="flex items-start gap-3">
         <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm mt-0.5 animate-pulse">
@@ -218,7 +218,7 @@
       rel="noopener noreferrer"
       onclick={handleClick}
       in:fly={anim}
-      class="p-4 rounded-2xl bg-gradient-to-r from-emerald-600/30 to-green-600/30 hover:from-emerald-600/40 hover:to-green-600/40 border border-emerald-500/50 backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md group"
+      class="p-4 rounded-2xl bg-gradient-to-r from-emerald-600/30 to-green-600/30 hover:from-emerald-600/40 hover:to-green-600/40 border border-emerald-500/50 backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md group"
     >
       <div class="flex items-center gap-3.5 min-w-0 flex-1">
         <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-md shadow-emerald-500/20">
@@ -247,7 +247,7 @@
       href={telUrl}
       onclick={handleClick}
       in:fly={anim}
-      class="p-4 rounded-2xl bg-gradient-to-r from-rose-600/25 to-red-600/25 hover:from-rose-600/35 hover:to-red-600/35 border border-rose-500/50 backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md group"
+      class="p-4 rounded-2xl bg-gradient-to-r from-rose-600/25 to-red-600/25 hover:from-rose-600/35 hover:to-red-600/35 border border-rose-500/50 backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md group"
     >
       <div class="flex items-center gap-3.5 min-w-0 flex-1">
         <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-md shadow-rose-500/20 animate-pulse">
@@ -276,7 +276,7 @@
       href={mailtoUrl}
       onclick={handleClick}
       in:fly={anim}
-      class="p-4 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-sky-500/50 backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md group"
+      class="p-4 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-sky-500/50 backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md group"
     >
       <div class="flex items-center gap-3.5 min-w-0 flex-1">
         <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -296,7 +296,7 @@
   {:else if block.type === 'location'}
     <div
       in:fly={anim}
-      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-md shadow-md space-y-2.5 text-left"
+      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-sm shadow-md space-y-2.5 text-left"
     >
       <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
@@ -330,7 +330,7 @@
       download
       onclick={handleClick}
       in:fly={anim}
-      class="p-4 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md group"
+      class="p-4 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md group"
     >
       <div class="flex items-center gap-3.5 min-w-0 flex-1">
         <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -371,7 +371,7 @@
   {:else if block.type === 'qr_code'}
     <div
       in:scale={{ duration: 300, delay: index * 30, start: 0.95 }}
-      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-md shadow-md text-center space-y-2.5"
+      class="p-4 rounded-2xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-sm shadow-md text-center space-y-2.5"
     >
       {#if block.title}
         <h4 class="text-xs sm:text-sm font-bold text-[var(--color-text)] flex items-center justify-center gap-1.5">
@@ -394,7 +394,7 @@
       rel="noopener noreferrer"
       onclick={handleClick}
       in:fly={anim}
-      class={`group relative p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md ${
+      class={`group relative p-3.5 sm:p-4 rounded-2xl border backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md ${
         isFeatured
           ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-amber-500/20 border-amber-400/60 shadow-amber-500/10 hover:border-amber-400 scale-[1.02] ring-1 ring-amber-400/30'
           : 'bg-[var(--color-card)]/85 hover:bg-[var(--color-card)] border-[var(--color-border)] hover:border-[var(--color-primary)]/50'

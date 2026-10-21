@@ -67,7 +67,7 @@
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
     <a
       href="/"
-      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-[11px] font-mono font-bold text-cyan-400 backdrop-blur-md transition shadow-md"
+      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-[11px] font-mono font-bold text-cyan-400 backdrop-blur-sm transition shadow-md"
     >
       <ArrowLeft class="w-3.5 h-3.5" />
       <span>[SYS: BACK_TO_ROOT]</span>
@@ -78,21 +78,21 @@
         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${microsite.name}\n${window.location.href}`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold flex items-center gap-1.5 transition backdrop-blur-md"
+        class="px-3 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
       >
         <Send class="w-3.5 h-3.5" />
         <span>TRANSMIT_WA</span>
       </a>
       <button
         onclick={onCopyLink}
-        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-md transition"
+        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-sm transition"
         title="Copy Endpoint URL"
       >
         {#if copied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
       </button>
       <button
         onclick={onOpenQR}
-        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-md transition"
+        class="p-2 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 backdrop-blur-sm transition"
         title="Scan Matrix QR"
             aria-label="Scan Matrix QR"
       >
@@ -126,7 +126,7 @@
     {#if microsite.phone || microsite.email || microsite.address}
       <div
         in:fade={{ duration: 400, delay: 200 }}
-        class="p-5 rounded-2xl bg-[var(--color-card)]/85 backdrop-blur-xl border border-cyan-500/30 space-y-3"
+        class="p-5 rounded-2xl bg-[var(--color-card)]/85 backdrop-blur-sm border border-cyan-500/30 space-y-3"
       >
         <div class="font-mono text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
           <Radio class="w-3.5 h-3.5 text-cyan-400 animate-pulse" />

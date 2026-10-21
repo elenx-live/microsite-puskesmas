@@ -63,7 +63,7 @@
       rel="noopener noreferrer"
       onclick={handleClick}
       in:fly={{ y: 15, duration: 300, delay: index * 40 }}
-      class={`group relative p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md flex items-center justify-between transition-all duration-300 shadow-md ${
+      class={`group relative p-3.5 sm:p-4 rounded-2xl border backdrop-blur-sm flex items-center justify-between transition-all duration-300 shadow-md ${
         isFeatured
           ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-amber-500/20 border-amber-400/60 shadow-amber-500/10 hover:border-amber-400 scale-[1.02] ring-1 ring-amber-400/30'
           : 'bg-[var(--color-card)]/85 hover:bg-[var(--color-card)] border-[var(--color-border)] hover:border-[var(--color-primary)]/50'

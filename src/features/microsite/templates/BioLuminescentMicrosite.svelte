@@ -62,13 +62,13 @@
 
   <ArtisticBackgroundCanvas type={activeAnimation} intensity="vibrant" />
 
-  <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[550px] h-[400px] bg-teal-500/20 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse" />
-  <div class="absolute top-1/3 right-1/4 w-[350px] h-[350px] bg-emerald-500/15 rounded-full blur-[90px] pointer-events-none -z-10" />
+  <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[550px] h-[400px] bg-teal-500/20 rounded-full blur-[40px] pointer-events-none -z-10 animate-pulse" />
+  <div class="absolute top-1/3 right-1/4 w-[350px] h-[350px] bg-emerald-500/15 rounded-full blur-[36px] pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-2 mb-6">
     <a
       href="/"
-      class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-xs font-semibold text-teal-300 backdrop-blur-md transition shadow-lg shadow-teal-950/20"
+      class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-xs font-semibold text-teal-300 backdrop-blur-sm transition shadow-lg shadow-teal-950/20"
     >
       <ArrowLeft class="w-3.5 h-3.5" />
       <span>Beranda</span>
@@ -79,21 +79,21 @@
         href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${microsite.name}\n${window.location.href}`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3.5 py-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-md shadow-lg shadow-emerald-950/20"
+        class="px-3.5 py-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-sm shadow-lg shadow-emerald-950/20"
       >
         <Send class="w-3.5 h-3.5" />
         <span>Bagikan</span>
       </a>
       <button
         onclick={onCopyLink}
-        class="p-2.5 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-teal-300 backdrop-blur-md transition shadow-md"
+        class="p-2.5 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-teal-300 backdrop-blur-sm transition shadow-md"
         title="Salin Tautan"
       >
         {#if copied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
       </button>
       <button
         onclick={onOpenQR}
-        class="p-2.5 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-teal-300 backdrop-blur-md transition shadow-md"
+        class="p-2.5 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-teal-300 backdrop-blur-sm transition shadow-md"
         title="Pindai QR"
             aria-label="Pindai QR"
       >
@@ -122,7 +122,7 @@
     {#if microsite.phone || microsite.email || microsite.address}
       <div
         in:fade={{ duration: 400, delay: 200 }}
-        class="p-6 rounded-[2rem] bg-[var(--color-card)]/80 backdrop-blur-xl border border-teal-500/25 space-y-4 shadow-xl shadow-teal-950/20"
+        class="p-6 rounded-[2rem] bg-[var(--color-card)]/80 backdrop-blur-sm border border-teal-500/25 space-y-4 shadow-xl shadow-teal-950/20"
       >
         <h4 class="text-xs font-bold uppercase tracking-widest text-teal-300 text-center">
           Layanan & Akses Posko

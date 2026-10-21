@@ -154,22 +154,22 @@
     {:else}
       <div class="flex justify-center items-center gap-2.5 pt-1 pb-2">
         {#if social.instagram}
-          <a href={social.instagram} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-pink-500/40 text-[var(--color-muted-foreground)] hover:text-pink-400 backdrop-blur-md transition shadow-sm hover:-translate-y-0.5" title="Instagram">
+          <a href={social.instagram} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-pink-500/40 text-[var(--color-muted-foreground)] hover:text-pink-400 backdrop-blur-sm transition shadow-sm hover:-translate-y-0.5" title="Instagram">
             <BrandIcon brand="instagram" class="w-4 h-4" />
           </a>
         {/if}
         {#if social.facebook}
-          <a href={social.facebook} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-blue-500/40 text-[var(--color-muted-foreground)] hover:text-blue-400 backdrop-blur-md transition shadow-sm hover:-translate-y-0.5" title="Facebook">
+          <a href={social.facebook} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-blue-500/40 text-[var(--color-muted-foreground)] hover:text-blue-400 backdrop-blur-sm transition shadow-sm hover:-translate-y-0.5" title="Facebook">
             <BrandIcon brand="facebook" class="w-4 h-4" />
           </a>
         {/if}
         {#if social.youtube}
-          <a href={social.youtube} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-rose-500/40 text-[var(--color-muted-foreground)] hover:text-rose-400 backdrop-blur-md transition shadow-sm hover:-translate-y-0.5" title="YouTube">
+          <a href={social.youtube} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-rose-500/40 text-[var(--color-muted-foreground)] hover:text-rose-400 backdrop-blur-sm transition shadow-sm hover:-translate-y-0.5" title="YouTube">
             <BrandIcon brand="youtube" class="w-4 h-4" />
           </a>
         {/if}
         {#if social.whatsapp}
-          <a href={social.whatsapp} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-emerald-500/40 text-[var(--color-muted-foreground)] hover:text-emerald-400 backdrop-blur-md transition shadow-sm hover:-translate-y-0.5" title="WhatsApp">
+          <a href={social.whatsapp} target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] hover:border-emerald-500/40 text-[var(--color-muted-foreground)] hover:text-emerald-400 backdrop-blur-sm transition shadow-sm hover:-translate-y-0.5" title="WhatsApp">
             <Send class="w-4 h-4" />
           </a>
         {/if}
@@ -292,7 +292,7 @@
   {:else if style === 'government_formal'}
     <div
       in:fade={{ duration: 400 }}
-      class="mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 border border-emerald-500/20 backdrop-blur-xl shadow-xl space-y-4"
+      class="mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/90 border border-emerald-500/20 backdrop-blur-sm shadow-xl space-y-4"
     >
       <div class="flex items-center justify-between border-b border-[var(--color-border)] pb-3.5">
         <div class="flex items-center gap-2.5">
@@ -358,7 +358,7 @@
       {@render socialIcons()}
       {@render footerLinks()}
 
-      <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-card)]/90 border border-[var(--color-border)] backdrop-blur-xl shadow-lg">
+      <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-card)]/90 border border-[var(--color-border)] backdrop-blur-sm shadow-lg">
         <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
           <HeartPulse class="w-3.5 h-3.5" />
         </div>
@@ -407,7 +407,7 @@
         {#if tagline}<p class="text-[10px] opacity-75">{tagline}</p>{/if}
       </div>
 
-      <div class="p-2 rounded-2xl bg-[var(--color-card)]/95 border border-[var(--color-border)] backdrop-blur-2xl shadow-2xl flex items-center justify-between gap-2 max-w-sm mx-auto">
+      <div class="p-2 rounded-2xl bg-[var(--color-card)]/95 border border-[var(--color-border)] backdrop-blur-sm shadow-2xl flex items-center justify-between gap-2 max-w-sm mx-auto">
         <div class="flex items-center gap-2 pl-2">
           <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           <span class="text-[11px] font-bold text-[var(--color-text)]">Portal Siap Diakses</span>
@@ -455,7 +455,7 @@
     <!-- DEFAULT: CARD CLEAN -->
     <div
       in:fade={{ duration: 400 }}
-      class={`mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-xl shadow-lg space-y-3.5 ${
+      class={`mt-6 mb-8 p-5 sm:p-6 rounded-3xl bg-[var(--color-card)]/80 border border-[var(--color-border)] backdrop-blur-sm shadow-lg space-y-3.5 ${
         alignment === 'left' ? 'text-left' : 'text-center'
       }`}
     >

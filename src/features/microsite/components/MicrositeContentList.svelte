@@ -59,7 +59,7 @@
         {@const groupBlocks = blocks.filter((b) => b.groupId === group.id)}
         {@const isCollapsed = group.collapsible && !!collapsedGroups[group.id]}
         {#if groupBlocks.length > 0}
-          <div class="rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)]/70 backdrop-blur-md p-4 space-y-3 shadow-md overflow-hidden">
+          <div class="rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)]/70 backdrop-blur-sm p-4 space-y-3 shadow-md overflow-hidden">
             <div
               onclick={() => group.collapsible && toggleGroup(group.id)}
               class={`flex items-center justify-between select-none ${group.collapsible ? 'cursor-pointer hover:opacity-80' : ''}`}

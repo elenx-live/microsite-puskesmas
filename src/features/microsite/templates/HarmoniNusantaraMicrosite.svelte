@@ -64,12 +64,12 @@
 
   <ArtisticBackgroundCanvas type={activeAnimation} intensity="medium" />
 
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-amber-600/15 via-orange-600/10 to-transparent blur-3xl pointer-events-none -z-10" />
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-amber-600/15 via-orange-600/10 to-transparent blur-xl pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-2 mb-6">
     <a
       href="/"
-      class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-xs font-semibold text-amber-200 backdrop-blur-md transition shadow-md"
+      class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-xs font-semibold text-amber-200 backdrop-blur-sm transition shadow-md"
     >
       <ArrowLeft class="w-3.5 h-3.5" />
       <span>Beranda Utama</span>
@@ -85,7 +85,7 @@
         })}`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="px-3.5 py-2 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-md"
+        class="px-3.5 py-2 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition backdrop-blur-sm"
         title="Bagikan ke WhatsApp dengan Pratinjau Gambar"
       >
         <Send class="w-3.5 h-3.5" />
@@ -93,14 +93,14 @@
       </a>
       <button
         onclick={onCopyLink}
-        class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-amber-300 backdrop-blur-md transition shadow-sm"
+        class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-amber-300 backdrop-blur-sm transition shadow-sm"
         title="Salin Tautan"
       >
         {#if copied}<Check class="w-4 h-4 text-emerald-400" />{:else}<Share2 class="w-4 h-4" />{/if}
       </button>
       <button
         onclick={onOpenQR}
-        class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-amber-300 backdrop-blur-md transition shadow-sm"
+        class="p-2.5 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-amber-300 backdrop-blur-sm transition shadow-sm"
         title="Pindai QR"
             aria-label="Pindai QR"
       >
@@ -129,7 +129,7 @@
     {#if microsite.phone || microsite.email || microsite.address}
       <div
         in:fade={{ duration: 400, delay: 200 }}
-        class="p-6 rounded-3xl bg-[var(--color-card)]/85 backdrop-blur-xl border border-amber-500/25 space-y-4 shadow-xl"
+        class="p-6 rounded-3xl bg-[var(--color-card)]/85 backdrop-blur-sm border border-amber-500/25 space-y-4 shadow-xl"
       >
         <h4 class="text-xs font-bold uppercase tracking-widest text-amber-300 text-center flex items-center justify-center gap-2">
           <Building2 class="w-4 h-4" />

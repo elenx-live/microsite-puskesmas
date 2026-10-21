@@ -326,7 +326,7 @@
 
     <!-- QR Code Modal Dialog -->
     {#if showQR}
-      <div class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
         <div class="w-full max-w-sm bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 space-y-5 text-center shadow-2xl relative">
           <button
             type="button"

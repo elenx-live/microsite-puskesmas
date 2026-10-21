@@ -58,7 +58,7 @@
 
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-1 mb-8">
     <a
-      href="#/"
+      href="/"
       class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
     >
       <ArrowLeft class="w-3.5 h-3.5" />

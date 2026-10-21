@@ -217,7 +217,7 @@
         Lihat Katalog Microsite Lainnya
       </a>
       <a
-        href="#/"
+        href="/"
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-bold text-xs hover:opacity-90 transition"
       >
         <ArrowLeft class="w-4 h-4" />
@@ -243,7 +243,7 @@
         Jelajahi Portal Microsite
       </a>
       <a
-        href="#/"
+        href="/"
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-bold text-xs hover:opacity-90 transition"
       >
         <ArrowLeft class="w-4 h-4" />
@@ -296,7 +296,7 @@
       </form>
 
       <div class="text-center pt-2">
-        <a href="#/" class="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] flex items-center justify-center gap-1.5">
+        <a href="/" class="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] flex items-center justify-center gap-1.5">
           <ArrowLeft class="w-3.5 h-3.5" />
           <span>Kembali ke Website Utama</span>
         </a>

@@ -66,7 +66,7 @@
 
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
     <a
-      href="#/"
+      href="/"
       class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 text-[11px] font-mono font-bold text-cyan-400 backdrop-blur-md transition shadow-md"
     >
       <ArrowLeft class="w-3.5 h-3.5" />

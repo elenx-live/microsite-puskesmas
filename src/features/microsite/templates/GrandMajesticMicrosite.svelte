@@ -69,7 +69,7 @@
 
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
     <a
-      href="#/"
+      href="/"
       class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-border)] text-xs font-semibold text-[var(--color-text)] backdrop-blur-md transition shadow-sm"
     >
       <ArrowLeft class="w-3.5 h-3.5 text-[var(--color-primary)]" />

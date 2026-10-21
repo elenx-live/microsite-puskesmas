@@ -135,7 +135,7 @@
   <!-- Top Bar -->
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-2">
     <a
-      href="#/"
+      href="/"
       class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
     >
       <ArrowLeft class="w-4 h-4" />

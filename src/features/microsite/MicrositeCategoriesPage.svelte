@@ -66,7 +66,7 @@
   <!-- Breadcrumb & Header -->
   <div class="space-y-4">
     <div class="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-      <a href="#/" class="hover:text-[var(--color-primary)] transition">Beranda</a>
+      <a href="/" class="hover:text-[var(--color-primary)] transition">Beranda</a>
       <span>/</span>
       <button type="button" onclick={handleBackToCategories} class={`hover:text-[var(--color-primary)] transition ${selectedCategory ? '' : 'text-[var(--color-text)] font-bold'}`}>
         Microsite

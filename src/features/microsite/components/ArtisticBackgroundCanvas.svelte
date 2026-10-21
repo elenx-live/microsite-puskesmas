@@ -450,7 +450,11 @@
     };
   });
 
-  const shouldRender = type !== 'none';
+  // Animasi DIMATIKAN 21 Okt 2026 atas permintaan ElenX (performa HP):
+  // komponen tidak lagi merender kanvas apa pun. Kode animasi di bawah
+  // sengaja dipertahankan utuh — untuk menghidupkan lagi, kembalikan baris
+  // ini menjadi: const shouldRender = type !== 'none';
+  const shouldRender = false;
 </script>
 
 {#if shouldRender}

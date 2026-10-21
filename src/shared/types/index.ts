@@ -941,6 +941,7 @@ export interface MicrositeEntity {
   profileImageUrl?: string;
   bannerImageUrl?: string;
   backgroundImageUrl?: string;
+  footerImageUrl?: string;
   ogImageUrl?: string;
   headerConfig?: MicrositeHeaderConfig;
   footerConfig?: MicrositeFooterConfig;

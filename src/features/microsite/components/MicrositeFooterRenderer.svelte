@@ -68,6 +68,8 @@
   const links = footerConfig.links || [];
   const alignment = footerConfig.alignment || 'center';
 
+  const footerImg = microsite.footerImageUrl;
+
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -182,23 +184,23 @@
   {#if showGovBadges}
     <div class="flex flex-wrap items-center justify-center gap-2 py-2">
       {#if badgesList.includes('kemenkes')}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-          <HeartPulse class="w-3 h-3 text-emerald-400" /><span>Kemenkes RI</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-[10px] font-bold">
+          <HeartPulse class="w-3 h-3 text-[var(--color-primary)]" /><span>Kemenkes RI</span>
         </span>
       {/if}
       {#if badgesList.includes('germas')}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] font-bold">
-          <Sparkles class="w-3 h-3 text-teal-400" /><span>GERMAS</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-[10px] font-bold">
+          <Sparkles class="w-3 h-3 text-[var(--color-primary)]" /><span>GERMAS</span>
         </span>
       {/if}
       {#if badgesList.includes('akreditasi')}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold">
-          <Award class="w-3 h-3 text-amber-400" /><span>Akreditasi Paripurna</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-[10px] font-bold">
+          <Award class="w-3 h-3 text-[var(--color-primary)]" /><span>Akreditasi Paripurna</span>
         </span>
       {/if}
       {#if badgesList.includes('puskesmas')}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold">
-          <Building2 class="w-3 h-3 text-indigo-400" /><span>Puskesmas Resmi</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] text-[10px] font-bold">
+          <Building2 class="w-3 h-3 text-[var(--color-primary)]" /><span>Puskesmas Resmi</span>
         </span>
       {/if}
       {#if customBadgesText}
@@ -276,7 +278,7 @@
   {/if}
 {/snippet}
 
-{#if style !== 'hidden'}
+{#snippet footerBody()}
   {#if style === 'minimal'}
     <div class={`pt-6 pb-10 space-y-3 ${alignment === 'left' ? 'text-left' : 'text-center'}`}>
       {@render socialIcons()}
@@ -469,5 +471,25 @@
         {#if tagline}<p class="text-[10px] opacity-80 leading-relaxed">{tagline}</p>{/if}
       </div>
     </div>
+  {/if}
+{/snippet}
+
+{#if style !== 'hidden'}
+  {#if footerImg}
+    <div class="relative overflow-hidden rounded-3xl mt-6 mb-8">
+      <img
+        src={footerImg}
+        alt=""
+        aria-hidden="true"
+        referrerPolicy="no-referrer"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-[var(--color-bg)]/70" />
+      <div class="relative">
+        {@render footerBody()}
+      </div>
+    </div>
+  {:else}
+    {@render footerBody()}
   {/if}
 {/if}

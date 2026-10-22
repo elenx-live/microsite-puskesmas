@@ -93,16 +93,27 @@
         </p>
       </div>
 
-      {#if selectedCategory}
-        <Button
-          variant="outline"
-          onclick={handleBackToCategories}
-          class="inline-flex items-center gap-2 self-start md:self-auto rounded-xl text-xs"
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-start md:self-auto">
+        {#if selectedCategory}
+          <Button
+            variant="outline"
+            onclick={handleBackToCategories}
+            class="inline-flex items-center gap-2 self-start md:self-auto rounded-xl text-xs"
+          >
+            <ArrowLeft class="w-4 h-4" />
+            <span>Kembali ke Kategori</span>
+          </Button>
+        {/if}
+        <a
+          href="https://sumenep.puskesmasmanding.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-text)] shadow-sm hover:opacity-90 transition"
         >
-          <ArrowLeft class="w-4 h-4" />
-          <span>Kembali ke Kategori</span>
-        </Button>
-      {/if}
+          <Globe class="w-4 h-4" />
+          <span>Web Puskesmas</span>
+        </a>
+      </div>
     </div>
   </div>
 

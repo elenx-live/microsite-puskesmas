@@ -2,6 +2,7 @@
 <script lang="ts">
   import {
     ArrowLeft,
+    Globe,
     QrCode,
     Share2,
     Check
@@ -57,13 +58,24 @@
   <ArtisticBackgroundCanvas type={activeAnimation} intensity="subtle" />
 
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-1 mb-8">
-    <a
-      href="/"
-      class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
-    >
-      <ArrowLeft class="w-3.5 h-3.5" />
-      <span>INDEX</span>
-    </a>
+    <div class="flex items-center gap-3">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
+      >
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>INDEX</span>
+      </a>
+      <a
+        href="https://sumenep.puskesmasmanding.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--color-primary)] hover:opacity-80 transition"
+      >
+        <Globe class="w-3.5 h-3.5" />
+        <span>Web Puskesmas</span>
+      </a>
+    </div>
 
     <div class="flex items-center gap-3">
       <button

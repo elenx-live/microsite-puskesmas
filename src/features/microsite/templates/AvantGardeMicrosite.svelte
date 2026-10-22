@@ -65,13 +65,24 @@
   <div class="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--color-primary)_4%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_srgb,var(--color-primary)_4%,transparent)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-xl flex justify-between items-center px-2 mb-6">
-    <a
-      href="/"
-      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/70 border border-[var(--color-primary)]/40 text-[11px] font-mono font-bold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
-    >
-      <ArrowLeft class="w-3.5 h-3.5" />
-      <span>[SYS: BACK_TO_ROOT]</span>
-    </a>
+    <div class="flex items-center gap-2">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/70 border border-[var(--color-primary)]/40 text-[11px] font-mono font-bold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
+      >
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>[SYS: BACK_TO_ROOT]</span>
+      </a>
+      <a
+        href="https://sumenep.puskesmasmanding.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-primary)]/70 hover:bg-[var(--color-primary)]/85 border border-[var(--color-primary)]/40 text-[11px] font-mono font-bold text-[var(--color-primary-foreground)] backdrop-blur-sm transition shadow-md"
+      >
+        <Globe class="w-3.5 h-3.5" />
+        <span>Web Puskesmas</span>
+      </a>
+    </div>
 
     <div class="flex items-center gap-2">
       <a

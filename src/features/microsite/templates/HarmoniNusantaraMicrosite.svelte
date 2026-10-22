@@ -67,13 +67,24 @@
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-[var(--color-primary)]/15 via-[var(--color-accent)]/10 to-transparent blur-xl pointer-events-none -z-10" />
 
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-2 mb-6">
-    <a
-      href="/"
-      class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-primary)]/30 text-xs font-semibold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
-    >
-      <ArrowLeft class="w-3.5 h-3.5" />
-      <span>Beranda Utama</span>
-    </a>
+    <div class="flex items-center gap-2">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-[var(--color-primary)]/30 text-xs font-semibold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
+      >
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>Beranda Utama</span>
+      </a>
+      <a
+        href="https://sumenep.puskesmasmanding.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 text-xs font-semibold text-[var(--color-primary)] backdrop-blur-sm transition shadow-md"
+      >
+        <Globe class="w-3.5 h-3.5" />
+        <span>Web Puskesmas</span>
+      </a>
+    </div>
 
     <div class="flex items-center gap-2">
       <a

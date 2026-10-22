@@ -147,13 +147,24 @@
 
   <!-- Top Bar -->
   <div class="relative z-10 w-full max-w-lg flex justify-between items-center px-2">
-    <a
-      href="/"
-      class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
-    >
-      <ArrowLeft class="w-4 h-4" />
-      <span>Website Utama</span>
-    </a>
+    <div class="flex items-center gap-3">
+      <a
+        href="/"
+        class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
+      >
+        <ArrowLeft class="w-4 h-4" />
+        <span>Daftar Microsite</span>
+      </a>
+      <a
+        href="https://sumenep.puskesmasmanding.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-primary)] hover:opacity-80 transition"
+      >
+        <Globe class="w-4 h-4" />
+        <span>Web Puskesmas</span>
+      </a>
+    </div>
 
     <div class="flex items-center gap-2">
       <a

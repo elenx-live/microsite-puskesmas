@@ -2,6 +2,7 @@
 <script lang="ts">
   import { Globe, ArrowRight, Lock, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-svelte';
   import Button from '../../shared/ui/Button.svelte';
+  import AuthMenu from '../auth/AuthMenu.svelte';
   import { routerState, navigate } from '../../app/router.svelte.js';
   import { micrositeService } from '../../shared/services/micrositeService.js';
   import type { MicrositeEntity, MicrositeCategory } from '../../shared/types/index.js';
@@ -67,15 +68,18 @@
     <a href="/" class="flex items-center gap-2 min-w-0">
       <span class="text-sm font-bold text-[var(--color-text)] truncate">Microsite Puskesmas Manding</span>
     </a>
-    <a
-      href="https://sumenep.puskesmasmanding.com"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text)] shadow-sm hover:opacity-90 transition"
-    >
-      <Globe class="w-4 h-4" />
-      <span>Web Puskesmas</span>
-    </a>
+    <div class="flex items-center gap-2 shrink-0">
+      <AuthMenu />
+      <a
+        href="https://sumenep.puskesmasmanding.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text)] shadow-sm hover:opacity-90 transition"
+      >
+        <Globe class="w-4 h-4" />
+        <span>Web Puskesmas</span>
+      </a>
+    </div>
   </div>
 </div>
 

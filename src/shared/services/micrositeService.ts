@@ -474,6 +474,38 @@ export const micrositeService = {
     return safeItem as MicrositeEntity;
   },
 
+  /**
+   * Ambil halaman publik per-slug lewat server (dengan gating draf).
+   * Server mengembalikan record penuh bila terbit atau viewer berhak
+   * (pemilik/petugas/admin login); untuk draf yang tidak berhak dibuka,
+   * hanya info status minimal agar UI "belum diterbitkan" bisa tampil
+   * tanpa membocorkan isi draf.
+   */
+  async getMicrositePageBySlug(slug: string): Promise<{
+    record: MicrositeEntity | null;
+    draft: { name: string; slug: string; status: string; active: boolean } | null;
+  }> {
+    let cleanSlug = (slug || '').trim();
+    try {
+      cleanSlug = decodeURIComponent(cleanSlug);
+    } catch {}
+    cleanSlug = cleanSlug.replace(/^\/+|\/+$/g, '').trim();
+    if (!cleanSlug) return { record: null, draft: null };
+    try {
+      const res = await fetch(`/api/microsites/by-slug/${encodeURIComponent(cleanSlug)}`);
+      if (res.status === 404) return { record: null, draft: null };
+      if (!res.ok) return { record: null, draft: null };
+      const json = await res.json();
+      if (json.draft) {
+        return { record: null, draft: json.data };
+      }
+      const { password, ...safeItem } = json.data ?? {};
+      return { record: (safeItem ?? null) as MicrositeEntity | null, draft: null };
+    } catch {
+      return { record: null, draft: null };
+    }
+  },
+
   async getMicrositeBySlug(slug: string): Promise<MicrositeEntity | null> {
     let cleanSlug = (slug || '').trim().toLowerCase();
     try {

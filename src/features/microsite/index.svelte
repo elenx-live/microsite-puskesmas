@@ -14,6 +14,7 @@
   } from 'lucide-svelte';
   import { routerState } from '../../app/router.svelte.js';
   import { micrositeService } from '../../shared/services/micrositeService.js';
+  import { authStore } from '../../shared/stores/auth.svelte.js';
   import {
     getMicrositeTheme,
     micrositeThemeCssVars
@@ -80,7 +81,6 @@
 
   $effect(() => {
     const currentSlug = slug;
-    const preview = isPreviewMode;
     let isMounted = true;
 
     const loadPage = async (isInitial = false) => {
@@ -97,25 +97,32 @@
       notFound = false;
       isDraftUnpublished = false;
       try {
-        const data = await micrositeService.getMicrositeBySlug(currentSlug);
+        // Sesi login menentukan apakah draf boleh dibuka (server yang menilai).
+        await authStore.load();
+        const page = await micrositeService.getMicrositePageBySlug(currentSlug);
         if (!isMounted) return;
 
-        if (!data) {
+        if (!page.record) {
+          if (page.draft) {
+            // Draf ada tapi viewer tidak berhak: tampilkan layar "belum
+            // diterbitkan" tanpa membocorkan isi draf.
+            isDraftUnpublished = true;
+            microsite = {
+              id: '',
+              name: page.draft.name,
+              slug: page.draft.slug,
+              status: page.draft.status,
+              active: page.draft.active
+            } as unknown as MicrositeEntity;
+            loading = false;
+            return;
+          }
           notFound = true;
           loading = false;
           return;
         }
 
-        // Access checks for non-admin visitors
-        if (!preview) {
-          if (data.status !== 'published' || !data.active) {
-            isDraftUnpublished = true;
-            microsite = data;
-            loading = false;
-            return;
-          }
-        }
-
+        const data = page.record;
         microsite = data;
 
         // Update Dynamic Meta Tags & Title based on Panel Settings & Microsite Content

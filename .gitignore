@@ -1,5 +1,25 @@
-node_modules
-dist
+node_modules/
+dist/
+build/
+coverage/
 .env
+.env.*
+!.env.example
 *.log
 .DS_Store
+
+# Data live (jangan dilacak)
+*.db
+*.db-wal
+*.db-shm
+data_store/
+data_store_contact.json
+microsites_data.json
+microsites_meta.json
+site_settings.json
+i_provider_config.json
+ai_provider_config.json
+homepage_draft.json
+homepage_published.json
+public/uploads/
+public/logo-custom.png

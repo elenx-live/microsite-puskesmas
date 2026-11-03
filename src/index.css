@@ -1,0 +1,301 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ==========================================================================
+ * MICROSITE STUDIO — DESIGN SYSTEM v2 ("Aurora Klinis")
+ * --------------------------------------------------------------------------
+ * Arah desain: premium healthcare SaaS. Bersih, lapang, dengan aksen hijau
+ * teal yang tenang dan interaksi halus. Bukan template dashboard generik.
+ *
+ * ATURAN TOKEN:
+ *  - --color-* adalah FALLBACK. Bila server menyuntik #server-theme-vars
+ *    (tema publikasi admin), nilai server MENANG. Jangan hard-code warna
+ *    di komponen; selalu lewat token ini agar tema server tetap berlaku.
+ *  - --radius-* , --space-* , --shadow-* adalah token struktur (tidak
+ *    di-override server).
+ * ========================================================================== */
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Skala tipografi eksplisit (Tailwind v4 punya default, ini menyelaraskan display) */
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.03em;
+}
+
+@layer base {
+  :root {
+    /* ── Warna inti (fallback) ─────────────────────────────────────────── */
+    --color-primary: #0E8A63;
+    --color-primary-foreground: #FFFFFF;
+    --color-primary-strong: #0A6E4E;
+    --color-secondary: #E4F5ED;
+    --color-secondary-foreground: #105B3F;
+    --color-accent: #17A47C;
+    --color-accent-foreground: #FFFFFF;
+    --color-bg: #F7FBF9;
+    --color-text: #14241F;
+    --color-card: #FFFFFF;
+    --color-card-foreground: #14241F;
+    --color-surface: #FFFFFF;
+    --color-surface-foreground: #14241F;
+    --color-muted: #EEF6F2;
+    --color-muted-foreground: #5A6F68;
+    --color-border: #DCEAE3;
+    --color-border-strong: #C4D9CF;
+    --color-input: #DCEAE3;
+    --color-ring: #0E8A63;
+    --color-success: #15A34A;
+    --color-warning: #B45309;
+    --color-danger: #DC2626;
+    --color-danger-foreground: #FFFFFF;
+    --color-info: #0284C7;
+
+    /* ── Token struktur ───────────────────────────────────────────────── */
+    --theme-radius: 18px;
+    --radius-xs: 8px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-2xl: 32px;
+    --button-radius: 12px;
+    --input-radius: 12px;
+    --pill-radius: 999px;
+
+    /* ── Elevation (bayangan lembut berlapis) ─────────────────────────── */
+    --shadow-xs: 0 1px 2px 0 rgb(16 42 34 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(16 42 34 / 0.06), 0 1px 2px -1px rgb(16 42 34 / 0.05);
+    --shadow-md: 0 4px 12px -2px rgb(16 42 34 / 0.08), 0 2px 6px -2px rgb(16 42 34 / 0.05);
+    --shadow-lg: 0 12px 28px -8px rgb(16 42 34 / 0.14), 0 4px 10px -4px rgb(16 42 34 / 0.06);
+    --shadow-xl: 0 24px 48px -16px rgb(16 42 34 / 0.20), 0 8px 20px -8px rgb(16 42 34 / 0.08);
+    --shadow-glow: 0 10px 30px -12px color-mix(in oklab, var(--color-primary) 55%, transparent);
+
+    /* ── Gerak ────────────────────────────────────────────────────────── */
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-fast: 140ms;
+    --dur-base: 220ms;
+    --dur-slow: 420ms;
+  }
+
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[var(--color-bg)] text-[var(--color-text)] font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.028em;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* focus-visible dirancang, bukan default browser */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 24%, transparent);
+    color: var(--color-text);
+  }
+
+  /* Scrollbar halus (WebKit) */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: var(--pill-radius);
+    border: 3px solid var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted-foreground); }
+
+  img, svg, video { display: block; max-width: 100%; }
+}
+
+@layer utilities {
+  /* ── Radius helper (dipakai komponen lama: theme-radius/theme-button-radius) ── */
+  .theme-radius { border-radius: var(--theme-radius); }
+  .theme-button-radius { border-radius: var(--button-radius); }
+  .theme-border { border-color: var(--color-border); }
+
+  /* ── Elevation helper ─────────────────────────────────────────────── */
+  .elev-xs { box-shadow: var(--shadow-xs); }
+  .elev-sm { box-shadow: var(--shadow-sm); }
+  .elev-md { box-shadow: var(--shadow-md); }
+  .elev-lg { box-shadow: var(--shadow-lg); }
+  .elev-xl { box-shadow: var(--shadow-xl); }
+  .elev-glow { box-shadow: var(--shadow-glow); }
+
+  /* ── Permukaan kaca (glassmorphism halus) ─────────────────────────── */
+  .surface-glass {
+    background: color-mix(in oklab, var(--color-card) 72%, transparent);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+  }
+
+  /* ── Gradien aksen lembut ─────────────────────────────────────────── */
+  .text-gradient {
+    background: linear-gradient(120deg, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-aurora {
+    background:
+      radial-gradient(1200px 520px at 12% -8%, color-mix(in oklab, var(--color-primary) 14%, transparent), transparent 60%),
+      radial-gradient(900px 420px at 100% 0%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 55%);
+  }
+
+  /* ── Kartu Studio ─────────────────────────────────────────────────── */
+  .studio-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--theme-radius);
+    box-shadow: var(--shadow-xs);
+    transition:
+      transform var(--dur-base) var(--ease-out-soft),
+      border-color var(--dur-base) var(--ease-out-soft),
+      box-shadow var(--dur-base) var(--ease-out-soft);
+  }
+  .studio-card-interactive { will-change: transform; }
+  .studio-card-interactive:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklab, var(--color-primary) 42%, var(--color-border));
+    box-shadow: var(--shadow-lg);
+  }
+  .studio-card-interactive:active { transform: translateY(-1px); }
+
+  .studio-num { font-variant-numeric: tabular-nums; }
+
+  /* ── Animasi masuk ────────────────────────────────────────────────── */
+  .studio-fade-in { animation: studioFade var(--dur-slow) var(--ease-out-soft) both; }
+  @keyframes studioFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .animate-rise { animation: riseIn 480ms var(--ease-out-soft) both; }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.99); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .animate-pop { animation: popIn 320ms var(--ease-spring) both; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .animate-slide-in-right { animation: slideInRight var(--dur-base) var(--ease-out-soft) both; }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg,
+      var(--color-muted) 0%,
+      color-mix(in oklab, var(--color-muted) 55%, var(--color-card)) 50%,
+      var(--color-muted) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Garis aksen tipis untuk header seksi ─────────────────────────── */
+  .rule-accent {
+    height: 3px;
+    width: 44px;
+    border-radius: var(--pill-radius);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  }
+
+  /* ── Marquee ─────────────────────────────────────────────────────── */
+  .animate-marquee { animation: marquee 55s linear infinite; }
+  .animate-marquee:hover { animation-play-state: paused; }
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Konten HTML dinamis (safety net) ─────────────────────────────── */
+  .html-safe-content {
+    color: var(--color-text);
+    line-height: 1.75;
+    font-size: 0.95rem;
+  }
+  .html-safe-content h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; color: var(--color-text); margin-top: 1.75rem; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
+  .html-safe-content h2 { font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: var(--color-text); margin-top: 1.5rem; margin-bottom: 0.75rem; letter-spacing: -0.02em; border-bottom: 1px solid var(--color-border); padding-bottom: 0.375rem; }
+  .html-safe-content h3 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; color: var(--color-text); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+  .html-safe-content h4, .html-safe-content h5, .html-safe-content h6 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; color: var(--color-text); margin-top: 1rem; margin-bottom: 0.5rem; }
+  .html-safe-content p { color: var(--color-text); margin-bottom: 1rem; line-height: 1.75; }
+  .html-safe-content strong, .html-safe-content b { font-weight: 700; color: var(--color-text); }
+  .html-safe-content em, .html-safe-content i { font-style: italic; }
+  .html-safe-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5rem; margin-bottom: 1rem; }
+  .html-safe-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-top: 0.5rem; margin-bottom: 1rem; }
+  .html-safe-content li { margin-bottom: 0.375rem; color: var(--color-text); padding-left: 0.25rem; }
+  .html-safe-content blockquote { border-left: 4px solid var(--color-primary); background-color: var(--color-bg); padding: 0.875rem 1.25rem; margin: 1.25rem 0; border-radius: 0 0.75rem 0.75rem 0; font-style: italic; color: var(--color-text); }
+  .html-safe-content table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; border: 1px solid var(--color-border); border-radius: 0.75rem; overflow: hidden; }
+  .html-safe-content th { background-color: var(--color-bg); border: 1px solid var(--color-border); padding: 0.75rem 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--color-text); }
+  .html-safe-content td { border: 1px solid var(--color-border); padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--color-text); }
+  .html-safe-content a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
+  .html-safe-content a:hover { opacity: 0.85; }
+  .html-safe-content hr { border: 0; border-top: 1px solid var(--color-border); margin: 1.75rem 0; }
+  .html-safe-content img { max-width: 100%; height: auto; border-radius: 1rem; border: 1px solid var(--color-border); margin: 1.25rem 0; }
+  .html-safe-content code { background-color: var(--color-bg); border: 1px solid var(--color-border); padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.85em; font-family: ui-monospace, monospace; color: var(--color-primary); }
+
+  /* ── Gerak dibatasi bila pengguna minta reduced motion ────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+    .studio-card-interactive:hover,
+    .studio-card,
+    .studio-fade-in,
+    .animate-rise,
+    .animate-pop,
+    .animate-slide-in-right {
+      transform: none !important;
+    }
+  }
+}

@@ -1,49 +1,56 @@
 # Microsite Puskesmas Manding
 
-Aplikasi publik microsite Puskesmas Manding — **dilepas dari web utama**
-(`sumenep.puskesmasmanding.com`) menjadi aplikasi mandiri di
-`microsite.puskesmasmanding.com`, sesuai permintaan ElenX (21 Okt 2026).
+Aplikasi **platform microsite multi-pengguna** Puskesmas Manding — live di
+`microsite.puskesmasmanding.com`. Awalnya dilepas dari web utama
+(`sumenep.puskesmasmanding.com`) menjadi aplikasi mandiri, kini tumbuh menjadi
+platform multi-tenant penuh dengan Studio pengelola + Admin Panel.
 
-## Pembagian tugas
+## Stack
 
-- **Aplikasi ini (publik, tanpa login):** daftar microsite (`/`) dan halaman
-  per-slug (`/:slug`, alias `/m/:slug` dan `/microsite/:slug`), 6 template,
-  injeksi meta Open Graph untuk pratinjau tautan.
-- **Web utama (tetap):** modul admin `Admin > Microsites` (buat/ubah/hapus,
-  builder). Admin TIDAK pindah.
-- **Data:** kedua aplikasi membaca `puskesmas.db` yang sama (tabel `items`
-  koleksi `microsites`/`microsite_categories` + `kv_store` `site_settings`,
-  mode WAL). Aplikasi ini hanya membaca; penulisan tetap lewat web utama.
+- **Frontend:** React 19 + Vite 6 + Tailwind v4 + React Router 7 (SPA, di `src/`).
+- **Backend:** Express di `server.ts` (~6.0k baris), dikompilasi ke `dist/server.cjs`
+  dengan esbuild.
+- **DB:** SQLite via `better-sqlite3` (layer `db.ts`) — tabel `users`, `sessions`,
+  `microsites`, `audit_log`, `dashboard_prefs`, `platform_settings`.
+- **Auth:** sesi cookie HttpOnly (tabel `sessions`) + Google Sign-In (ID token).
 
-## Menjalankan
+## Rute utama
+
+- `/` — landing promosi platform; `/microsites` — direktori microsite.
+- `/m/:slug` (fallback `/:slug`) — portal publik microsite.
+- `/login`, `/register` — masuk/daftar (email + Google).
+- `/studio/*` — **Studio pengelola** (Ringkasan, Microsite Saya, Kustomisasi,
+  Profil, Pengaturan) — butuh sesi.
+- `/admin-panel/*` — **Admin Panel** (Ikhtisar, Pengguna, Semua Microsite,
+  Pengaturan Platform, Log Audit) — butuh role `admin`.
+
+## Peran & isolasi
+
+- **pengelola** — hanya microsite miliknya (owner-scoped; `403` untuk milik orang lain).
+- **admin** — semua microsite + pengguna + pengaturan platform.
+- **publik** — hanya microsite `published` + `aktif`.
+Isolasi ditegakkan di backend (`db.ts`), bukan hanya menyembunyikan menu.
+
+## Build & jalankan
 
 ```bash
 npm install
-npm run build        # hasil ke dist/
-PORT=3404 MICROSITE_DB_PATH=/path/ke/puskesmas.db node server.cjs
+npm run build        # vite build + esbuild server.ts → dist/server.cjs
+npm start            # node dist/server.cjs  (PORT default 3800)
 ```
 
-`server.cjs` nol dependensi (node:http + node:sqlite bawaan Node 22):
-menyajikan `dist/`, API baca `/api/db/*`, `/api/microsites/categories`,
-`/api/site-settings`, dan mengalihkan `/uploads/*` ke web utama.
-
-## Adaptasi dari kode web utama
-
-- Routing diubah dari hash (`#/m/:slug`) menjadi path (`/:slug`).
-- Tanpa login: pratinjau draf hanya lewat `?preview=true` (cek `authStore`
-  dihapus).
-- Tautan "internal" microsite (`/layanan`, `/berita`, ...) diarahkan ke
-  `https://sumenep.puskesmasmanding.com` (`shared/utils/siteLinks.ts`).
-- `shared/lib/firebase.ts` ditulis ulang tanpa Firebase (langsung `/api/db`).
-- `auditService` menjadi no-op (log audit hanya dipakai jalur admin).
-- Token warna Fresh Mint disalin ke `:root` di `src/app.css` (pengganti
-  `ThemeStyleInjector` web utama).
+Dev: `npm run dev` (tsx server.ts). Type-check: `npm run lint` (tsc --noEmit).
 
 ## Deploy produksi (VPS)
 
-- Service `microsite.service` (User www-data, port 3404,
-  `/opt/data/microsite-puskesmas/`).
-- Cloudflare Tunnel ingress `microsite.puskesmasmanding.com` → `127.0.0.1:3404`
-  + CNAME ke tunnel.
-- Setelah rsync: `chown -R www-data:www-data` lalu restart service, dan
-  verifikasi ISI konten (bukan cuma status 200).
+- Service systemd `microsite-studio.service` (User www, `WorkingDirectory`
+  app dir, `PORT=3800`, `ExecStart=node dist/server.cjs`).
+- **Wajib rebuild dua tahap** lalu restart: `vite build` saja tidak memperbarui
+  `dist/server.cjs`.
+- Sesudah restart: pastikan `/proc/<pid>/cwd` menunjuk app dir dan **hanya satu**
+  listener di :3800.
+
+## Berkas live (tidak dilacak)
+
+`.env`, `*.db` (+`-wal`/`-shm`), `data_store/`, `*_data.json`, `site_settings.json`,
+`public/uploads/` — semuanya masuk `.gitignore` (data/rahasia).

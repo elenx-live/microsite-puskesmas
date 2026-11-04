@@ -5,6 +5,7 @@ import { Compass, Home } from 'lucide-react';
 const LandingPage = lazy(() => import('./pages/public/LandingPage'));
 const MicrositeCategoriesPage = lazy(() => import('./pages/public/MicrositeCategoriesPage'));
 const MicrositePage = lazy(() => import('./pages/public/MicrositePage'));
+const ShareDashboardPage = lazy(() => import('./pages/public/ShareDashboardPage'));
 const AuthPage = lazy(() => import('./pages/public/AuthPage'));
 const StudioApp = lazy(() => import('./studio/StudioApp'));
 const AdminPanelApp = lazy(() => import('./admin/AdminPanelApp'));
@@ -75,6 +76,9 @@ export default function PublicApp() {
     }
     if (pathname.startsWith('/admin-panel')) {
       return <AdminPanelApp />;
+    }
+    if (pathname.startsWith('/share/')) {
+      return <ShareDashboardPage />;
     }
     if (pathname.startsWith('/m/')) {
       return <MicrositePage />;

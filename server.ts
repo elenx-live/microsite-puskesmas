@@ -533,6 +533,113 @@ app.post('/api/me/share', express.json(), (req, res) => {
   }
 });
 
+/* ── Draft / Publish / Riwayat dashboard publik (visual editor) ────── */
+
+// Simpan draft (autosave / manual) — tidak memengaruhi halaman publik.
+app.post('/api/me/share/draft', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const b = req.body || {};
+    const clean = sanitizeShareConfig(b.config || b);
+    const patch: any = { share_draft: JSON.stringify(clean) };
+    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
+    if (b.slug !== undefined) {
+      const slug = String(b.slug).trim().toLowerCase();
+      if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+        return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
+      }
+      if (slug && store.isShareSlugTaken(slug, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+      patch.share_slug = slug || null;
+    }
+    const updated = store.updateUser(u.id, patch);
+    return res.json({ success: true, draft: parseShareConfig(updated.share_draft), savedAt: updated.updated_at });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menyimpan draft.' });
+  }
+});
+
+// Publish draft → config + slug diaktifkan, versi lama dicatat ke riwayat.
+app.post('/api/me/share/publish', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const b = req.body || {};
+    const next = sanitizeShareConfig(b.config || (u.share_draft ? JSON.parse(u.share_draft) : u.share_config ? JSON.parse(u.share_config) : {}));
+    const slug = (b.slug !== undefined ? String(b.slug).trim().toLowerCase() : (u.share_slug || '')).trim();
+    if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+      return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
+    }
+    if (!slug) return res.status(400).json({ error: 'Isi slug dashboard dulu sebelum menerbitkan.' });
+    if (store.isShareSlugTaken(slug, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+
+    const prev = u.share_config ? { at: new Date().toISOString(), label: 'Sebelum terbit', config: parseShareConfig(u.share_config) } : null;
+    const history = parseShareHistory(u.share_history);
+    const nextHistory = ([...(prev ? [prev] : []), ...history]).slice(0, 20);
+
+    const patch: any = {
+      share_config: JSON.stringify(next),
+      share_slug: slug,
+      share_enabled: 1,
+      share_draft: null,
+      share_history: JSON.stringify(nextHistory),
+    };
+    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
+    const updated = store.updateUser(u.id, patch);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'publish_share', ip: clientIp(req) });
+    return res.json({ success: true, share: shareSettings(updated) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menerbitkan dashboard.' });
+  }
+});
+
+// Nonaktifkan dashboard publik (URL tidak lagi melayani).
+app.post('/api/me/share/unpublish', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const updated = store.updateUser(u.id, { share_enabled: 0 });
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'unpublish_share', ip: clientIp(req) });
+    return res.json({ success: true, share: shareSettings(updated) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menonaktifkan dashboard.' });
+  }
+});
+
+// Buang draft (kembali ke versi terbit).
+app.post('/api/me/share/discard-draft', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const updated = store.updateUser(u.id, { share_draft: null });
+    return res.json({ success: true, share: shareSettings(updated) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal membuang draft.' });
+  }
+});
+
+// Pulihkan config dari riwayat (index 0 = paling baru di riwayat).
+app.post('/api/me/share/restore', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const idx = Number(req.body?.index);
+    const history = parseShareHistory(u.share_history);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= history.length) {
+      return res.status(400).json({ error: 'Riwayat tidak ditemukan.' });
+    }
+    const restored = sanitizeShareConfig(history[idx].config);
+    const patch: any = { share_config: JSON.stringify(restored), share_draft: null };
+    const updated = store.updateUser(u.id, patch);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'restore_share', ip: clientIp(req) });
+    return res.json({ success: true, share: shareSettings(updated) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal memulihkan versi.' });
+  }
+});
+
 /** Konfigurasi kustomisasi dashboard publik + nilai default aman. */
 const SHARE_CONFIG_DEFAULTS = {
   theme: 'light' as 'light' | 'slate',
@@ -547,9 +654,77 @@ const SHARE_CONFIG_DEFAULTS = {
   emptyText: 'Pengelola ini belum memublikasikan microsite apa pun.',
   micrositeMode: 'all' as 'all' | 'selected',
   micrositeIds: [] as string[],
+  version: 2,
+  template: 'minimalist',
+  identity: {
+    dashboardName: '', ownerName: '', logoUrl: '', coverUrl: '', description: '',
+    contactEmail: '', contactPhone: '', contactAddress: '', socials: [] as any[], extraInfo: [] as any[],
+  },
+  background: {
+    type: 'solid', color: '', gradientFrom: '', gradientTo: '', gradientAngle: 135,
+    imageUrl: '', pattern: 'none', overlayOpacity: 0, imageOpacity: 30, imageBlur: 'none',
+  },
+  typography: {
+    fontPairing: 'inherit', headingScale: 'lg', baseSize: 16, headingWeight: 800,
+    lineHeight: 1.6, letterSpacing: 'normal', align: 'left',
+  },
+  colors: {
+    primary: 'auto', secondary: 'auto', accent: 'auto', background: 'auto', surface: 'auto',
+    text: 'auto', muted: 'auto', button: 'auto', border: 'auto',
+  },
+  layout: {
+    container: 'normal', columns: 3, gap: 'md', sectionSpacing: 'md', cardSize: 'normal', mobileColumns: 1,
+  },
+  card: {
+    style: 'elevated', radius: 'lg', imageRatio: 'wide', showDescription: true,
+    showCategory: true, showLinkCount: true, showShareButton: true, hoverLift: true, featuredIds: [] as string[],
+  },
+  sections: [
+    { id: 's-hero', type: 'hero', visible: true, title: '', content: '', layout: 'default', galleryImages: [] },
+    { id: 's-featured', type: 'featured', visible: true, title: 'Unggulan', content: '', layout: 'grid', galleryImages: [] },
+    { id: 's-microsites', type: 'microsites', visible: true, title: 'Semua Microsite', content: '', layout: 'grid', galleryImages: [] },
+    { id: 's-about', type: 'about', visible: false, title: 'Tentang', content: '', layout: 'default', galleryImages: [] },
+    { id: 's-contact', type: 'contact', visible: false, title: 'Kontak', content: '', layout: 'default', galleryImages: [] },
+    { id: 's-footer', type: 'footer', visible: true, title: '', content: '', layout: 'default', galleryImages: [] },
+  ] as any[],
 };
 
 const ACCENT_KEYS = ['emerald', 'sky', 'violet', 'rose', 'amber', 'zinc'];
+const THEME_IDS = ['minimalist', 'premium', 'gradient', 'corporate', 'creative', 'editorial', 'nature', 'artistic'];
+const SECTION_TYPES = ['hero', 'profile', 'featured', 'microsites', 'categories', 'about', 'gallery', 'social', 'contact', 'announcement', 'customText', 'footer'];
+const SAFE_URL_RE = /^(https?:\/\/|\/)[^\s"'<>]+$/i;
+const SAFE_IMG_RE = /^(https?:\/\/|\/|data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,)[^\s"']*$/i;
+
+/** Warna hanya boleh 'auto' atau hex/rgb/rgba/hsl yang aman (anti CSS-injection). */
+function safeColor(v: any, def = 'auto'): string {
+  const s = String(v ?? '').trim();
+  if (s === 'auto') return 'auto';
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s)) return s;
+  if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(s)) return s;
+  if (/^hsla?\(\s*\d{1,3}(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(s)) return s;
+  return def;
+}
+/** Teks bebas: buang tag & batasi panjang (tanpa HTML/CSS mentah). */
+function safeText(v: any, max: number): string {
+  return String(v ?? '').replace(/<[^>]*>/g, '').replace(/[\u0000-\u001f]/g, ' ').slice(0, max);
+}
+function safeUrl(v: any): string {
+  const s = String(v ?? '').trim();
+  return SAFE_URL_RE.test(s) ? s.slice(0, 600) : '';
+}
+function safeImg(v: any): string {
+  const s = String(v ?? '').trim();
+  return SAFE_IMG_RE.test(s) ? s.slice(0, 2000000) : '';
+}
+function clampNum(v: any, min: number, max: number, def: number, step = 1): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return def;
+  const r = Math.round(n / step) * step;
+  return Math.min(max, Math.max(min, r));
+}
+function oneOf<T>(v: any, allowed: readonly T[], def: T): T {
+  return allowed.includes(v) ? (v as T) : def;
+}
 
 /** Bersihkan/normalisasi config dari klien agar aman & konsisten. */
 function sanitizeShareConfig(raw: any) {
@@ -559,7 +734,59 @@ function sanitizeShareConfig(raw: any) {
   const ids = Array.isArray(c.micrositeIds)
     ? c.micrositeIds.map((x: any) => String(x)).filter(Boolean).slice(0, 200)
     : [];
+
+  // ── identity ──
+  const idIn = c.identity && typeof c.identity === 'object' ? c.identity : {};
+  const socials = Array.isArray(idIn.socials) ? idIn.socials
+    .slice(0, 12)
+    .map((s: any, i: number) => ({
+      id: safeText(s?.id, 40) || `soc-${i}`,
+      platform: oneOf(s?.platform, ['instagram', 'facebook', 'whatsapp', 'youtube', 'tiktok', 'x', 'linkedin', 'website', 'email', 'other'] as const, 'other'),
+      label: safeText(s?.label, 40),
+      url: safeUrl(s?.url),
+    }))
+    .filter((s: any) => s.url) : [];
+  const extraInfo = Array.isArray(idIn.extraInfo) ? idIn.extraInfo
+    .slice(0, 12)
+    .map((e: any) => ({ label: safeText(e?.label, 40), value: safeText(e?.value, 120) }))
+    .filter((e: any) => e.label || e.value) : [];
+
+  // ── background ──
+  const bgIn = c.background && typeof c.background === 'object' ? c.background : {};
+
+  // ── typography ──
+  const tyIn = c.typography && typeof c.typography === 'object' ? c.typography : {};
+
+  // ── colors ──
+  const coIn = c.colors && typeof c.colors === 'object' ? c.colors : {};
+
+  // ── layout ──
+  const laIn = c.layout && typeof c.layout === 'object' ? c.layout : {};
+
+  // ── card ──
+  const caIn = c.card && typeof c.card === 'object' ? c.card : {};
+
+  // ── sections ──
+  const secIn = Array.isArray(c.sections) ? c.sections : SHARE_CONFIG_DEFAULTS.sections;
+  const seen = new Set<string>();
+  const sections = secIn.slice(0, 14).map((s: any, i: number) => {
+    let sid = safeText(s?.id, 40).replace(/[^a-z0-9-]/gi, '');
+    if (!sid || seen.has(sid)) sid = `s-${i}`;
+    seen.add(sid);
+    return {
+      id: sid,
+      type: oneOf(s?.type, SECTION_TYPES as any, 'customText'),
+      visible: bool(s?.visible, true),
+      title: safeText(s?.title, 80),
+      content: safeText(s?.content, 2000),
+      layout: oneOf(s?.layout, ['default', 'grid', 'list', 'carousel', 'compact'] as const, 'default'),
+      galleryImages: Array.isArray(s?.galleryImages) ? s.galleryImages.slice(0, 12).map((g: any) => safeImg(g)).filter(Boolean) : [],
+      tone: oneOf(s?.tone, ['info', 'success', 'warning'] as const, 'info'),
+    };
+  });
+
   return {
+    // ── data lama (dipertahankan) ──
     theme: c.theme === 'slate' ? 'slate' : 'light',
     accent: ACCENT_KEYS.includes(c.accent) ? c.accent : SHARE_CONFIG_DEFAULTS.accent,
     columns: cols,
@@ -568,10 +795,71 @@ function sanitizeShareConfig(raw: any) {
     showStats: bool(c.showStats, true),
     showTagline: bool(c.showTagline, true),
     showShareButton: bool(c.showShareButton, true),
-    badgeLabel: String(c.badgeLabel ?? SHARE_CONFIG_DEFAULTS.badgeLabel).slice(0, 60),
-    emptyText: String(c.emptyText ?? SHARE_CONFIG_DEFAULTS.emptyText).slice(0, 300),
+    badgeLabel: safeText(c.badgeLabel ?? SHARE_CONFIG_DEFAULTS.badgeLabel, 60),
+    emptyText: safeText(c.emptyText ?? SHARE_CONFIG_DEFAULTS.emptyText, 300),
     micrositeMode: c.micrositeMode === 'selected' ? 'selected' : 'all',
     micrositeIds: ids,
+    // ── v2 ──
+    version: 2,
+    template: oneOf(c.template, THEME_IDS as any, 'minimalist'),
+    identity: {
+      dashboardName: safeText(idIn.dashboardName, 80),
+      ownerName: safeText(idIn.ownerName, 80),
+      logoUrl: safeImg(idIn.logoUrl),
+      coverUrl: safeImg(idIn.coverUrl),
+      description: safeText(idIn.description, 400),
+      contactEmail: safeText(idIn.contactEmail, 120),
+      contactPhone: safeText(idIn.contactPhone, 40),
+      contactAddress: safeText(idIn.contactAddress, 200),
+      socials,
+      extraInfo,
+    },
+    background: {
+      type: oneOf(bgIn.type, ['solid', 'gradient', 'image', 'pattern'] as const, 'solid'),
+      color: safeColor(bgIn.color, ''),
+      gradientFrom: safeColor(bgIn.gradientFrom, ''),
+      gradientTo: safeColor(bgIn.gradientTo, ''),
+      gradientAngle: clampNum(bgIn.gradientAngle, 0, 360, 135),
+      imageUrl: safeImg(bgIn.imageUrl),
+      pattern: oneOf(bgIn.pattern, ['none', 'dots', 'grid', 'waves', 'topography'] as const, 'none'),
+      overlayOpacity: clampNum(bgIn.overlayOpacity, 0, 90, 0),
+      imageOpacity: clampNum(bgIn.imageOpacity, 0, 100, 30),
+      imageBlur: oneOf(bgIn.imageBlur, ['none', 'sm', 'md', 'lg'] as const, 'none'),
+    },
+    typography: {
+      fontPairing: safeText(tyIn.fontPairing, 40) || 'inherit',
+      headingScale: oneOf(tyIn.headingScale, ['sm', 'md', 'lg', 'xl'] as const, 'lg'),
+      baseSize: clampNum(tyIn.baseSize, 14, 18, 16) as 14 | 15 | 16 | 17 | 18,
+      headingWeight: clampNum(tyIn.headingWeight, 600, 800, 800, 100) as 600 | 700 | 800,
+      lineHeight: oneOf(tyIn.lineHeight, [1.4, 1.5, 1.6, 1.7] as const, 1.6),
+      letterSpacing: oneOf(tyIn.letterSpacing, ['tight', 'normal', 'wide'] as const, 'normal'),
+      align: oneOf(tyIn.align, ['left', 'center'] as const, 'left'),
+    },
+    colors: {
+      primary: safeColor(coIn.primary), secondary: safeColor(coIn.secondary), accent: safeColor(coIn.accent),
+      background: safeColor(coIn.background), surface: safeColor(coIn.surface), text: safeColor(coIn.text),
+      muted: safeColor(coIn.muted), button: safeColor(coIn.button), border: safeColor(coIn.border),
+    },
+    layout: {
+      container: oneOf(laIn.container, ['narrow', 'normal', 'wide'] as const, 'normal'),
+      columns: [2, 3, 4].includes(Number(laIn.columns)) ? (Number(laIn.columns) as 2 | 3 | 4) : cols,
+      gap: oneOf(laIn.gap, ['sm', 'md', 'lg'] as const, 'md'),
+      sectionSpacing: oneOf(laIn.sectionSpacing, ['sm', 'md', 'lg'] as const, 'md'),
+      cardSize: oneOf(laIn.cardSize, ['compact', 'normal', 'large'] as const, 'normal'),
+      mobileColumns: laIn.mobileColumns === 2 ? 2 : 1,
+    },
+    card: {
+      style: oneOf(caIn.style, ['elevated', 'flat', 'outline', 'glass', 'gradient'] as const, 'elevated'),
+      radius: oneOf(caIn.radius, ['sm', 'md', 'lg', 'xl'] as const, 'lg'),
+      imageRatio: oneOf(caIn.imageRatio, ['hidden', 'square', 'wide'] as const, 'wide'),
+      showDescription: bool(caIn.showDescription, true),
+      showCategory: bool(caIn.showCategory, true),
+      showLinkCount: bool(caIn.showLinkCount, true),
+      showShareButton: bool(caIn.showShareButton, true),
+      hoverLift: bool(caIn.hoverLift, true),
+      featuredIds: Array.isArray(caIn.featuredIds) ? caIn.featuredIds.map((x: any) => String(x)).slice(0, 8) : [],
+    },
+    sections,
   };
 }
 
@@ -581,8 +869,14 @@ function parseShareConfig(raw: string | null | undefined) {
   return sanitizeShareConfig(obj);
 }
 
+/** Riwayat perubahan config (maks. 20 entri, terbaru di depan). */
+function parseShareHistory(raw: string | null | undefined): any[] {
+  try { const a = raw ? JSON.parse(raw) : []; return Array.isArray(a) ? a.slice(0, 20) : []; } catch { return []; }
+}
+
 function shareSettings(u: store.DbUser) {
   const enabled = !!u.share_enabled && !!u.share_slug;
+  const hasDraft = !!u.share_draft;
   return {
     slug: u.share_slug || '',
     enabled,
@@ -590,6 +884,9 @@ function shareSettings(u: store.DbUser) {
     title: u.share_title || '',
     url: enabled ? `/share/${u.share_slug}` : '',
     config: parseShareConfig(u.share_config),
+    draft: u.share_draft ? parseShareConfig(u.share_draft) : null,
+    hasDraft,
+    history: parseShareHistory(u.share_history).map((h: any) => ({ at: h.at, label: h.label || '' })),
   };
 }
 
@@ -605,10 +902,11 @@ app.get('/api/public/share/:slug', (req, res) => {
     });
     // Mode 'selected': tampilkan hanya microsite yang dipilih, urut sesuai pilihan.
     if (config.micrositeMode === 'selected') {
-      const order = new Map(config.micrositeIds.map((id: string, i: number) => [id, i]));
+      const order = new Map<string, number>(config.micrositeIds.map((id: string, i: number) => [id, i] as [string, number]));
+      const ord = (m: any): number => order.get(m.id) ?? order.get(m.slug) ?? 0;
       microsites = microsites
         .filter((m: any) => order.has(m.id) || order.has(m.slug))
-        .sort((a: any, b: any) => (order.get(a.id) ?? order.get(a.slug) ?? 0) - (order.get(b.id) ?? order.get(b.slug) ?? 0));
+        .sort((a: any, b: any) => ord(a) - ord(b));
     }
     return res.json({
       success: true,

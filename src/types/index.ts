@@ -838,8 +838,10 @@ export interface MicrositeCategory {
 
 /** Konfigurasi kustomisasi dashboard publik /share/<slug>. */
 export interface ShareConfig {
+  /** @deprecated gunakan `template`; dipertahankan untuk data lama. */
   theme: 'light' | 'slate';
   accent: string;
+  /** @deprecated gunakan `layout.columns`; dipertahankan untuk data lama. */
   columns: 2 | 3 | 4;
   showAvatar: boolean;
   showBadge: boolean;
@@ -850,9 +852,139 @@ export interface ShareConfig {
   emptyText: string;
   micrositeMode: 'all' | 'selected';
   micrositeIds: string[];
+
+  /* ── v2: Personal Website Builder ─────────────────────────────────── */
+  /** Tema terpilih dari Theme Gallery. */
+  template: DashboardTemplateId;
+  /** Identitas visual. */
+  identity: ShareIdentity;
+  /** Latar belakang & efek. */
+  background: ShareBackground;
+  /** Tipografi. */
+  typography: ShareTypography;
+  /** Warna (override tema bila diisi). */
+  colors: ShareColors;
+  /** Layout umum halaman. */
+  layout: ShareLayout;
+  /** Gaya kartu microsite. */
+  card: ShareCardStyle;
+  /** Susunan & visibilitas section. */
+  sections: ShareSection[];
+  /** Kunci tombol kontak/sosial aktif untuk data lama (opsional). */
+  version?: number;
 }
 
+export interface ShareIdentity {
+  dashboardName: string;
+  ownerName: string;
+  logoUrl: string;
+  coverUrl: string;
+  description: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactAddress: string;
+  socials: ShareSocial[];
+  /** Info tambahan bebas (label → nilai). */
+  extraInfo: { label: string; value: string }[];
+}
+
+export interface ShareSocial {
+  id: string;
+  platform: 'instagram' | 'facebook' | 'whatsapp' | 'youtube' | 'tiktok' | 'x' | 'linkedin' | 'website' | 'email' | 'other';
+  label: string;
+  url: string;
+}
+
+export interface ShareBackground {
+  type: 'solid' | 'gradient' | 'image' | 'pattern';
+  color: string;
+  gradientFrom: string;
+  gradientTo: string;
+  gradientAngle: number;
+  imageUrl: string;
+  pattern: 'none' | 'dots' | 'grid' | 'waves' | 'topography';
+  overlayOpacity: number;
+  imageOpacity: number;
+  imageBlur: 'none' | 'sm' | 'md' | 'lg';
+}
+
+export interface ShareTypography {
+  fontPairing: string;
+  headingScale: 'sm' | 'md' | 'lg' | 'xl';
+  baseSize: 14 | 15 | 16 | 17 | 18;
+  headingWeight: 600 | 700 | 800;
+  lineHeight: 1.4 | 1.5 | 1.6 | 1.7;
+  letterSpacing: 'tight' | 'normal' | 'wide';
+  align: 'left' | 'center';
+}
+
+export interface ShareColors {
+  /** 'auto' = ikut tema, selain itu hex. */
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  muted: string;
+  button: string;
+  border: string;
+}
+
+export interface ShareLayout {
+  container: 'narrow' | 'normal' | 'wide';
+  columns: 2 | 3 | 4;
+  gap: 'sm' | 'md' | 'lg';
+  sectionSpacing: 'sm' | 'md' | 'lg';
+  cardSize: 'compact' | 'normal' | 'large';
+  mobileColumns: 1 | 2;
+}
+
+export interface ShareCardStyle {
+  style: 'elevated' | 'flat' | 'outline' | 'glass' | 'gradient';
+  radius: 'sm' | 'md' | 'lg' | 'xl';
+  imageRatio: 'hidden' | 'square' | 'wide';
+  showDescription: boolean;
+  showCategory: boolean;
+  showLinkCount: boolean;
+  showShareButton: boolean;
+  hoverLift: boolean;
+  featuredIds: string[];
+}
+
+export type ShareSectionType =
+  | 'hero' | 'profile' | 'featured' | 'microsites' | 'categories'
+  | 'about' | 'gallery' | 'social' | 'contact' | 'announcement'
+  | 'customText' | 'footer';
+
+export interface ShareSection {
+  id: string;
+  type: ShareSectionType;
+  visible: boolean;
+  title: string;
+  content: string;
+  layout: 'default' | 'grid' | 'list' | 'carousel' | 'compact';
+  galleryImages: string[];
+  /** Hanya untuk section announcement. */
+  tone?: 'info' | 'success' | 'warning';
+}
+
+export type DashboardTemplateId =
+  | 'minimalist' | 'premium' | 'gradient' | 'corporate'
+  | 'creative' | 'editorial' | 'nature' | 'artistic';
+
+/* ── Section default (urutan awal) ──────────────────────────────────── */
+export const DEFAULT_SHARE_SECTIONS: ShareSection[] = [
+  { id: 's-hero', type: 'hero', visible: true, title: '', content: '', layout: 'default', galleryImages: [] },
+  { id: 's-featured', type: 'featured', visible: true, title: 'Unggulan', content: '', layout: 'grid', galleryImages: [] },
+  { id: 's-microsites', type: 'microsites', visible: true, title: 'Semua Microsite', content: '', layout: 'grid', galleryImages: [] },
+  { id: 's-about', type: 'about', visible: false, title: 'Tentang', content: '', layout: 'default', galleryImages: [] },
+  { id: 's-contact', type: 'contact', visible: false, title: 'Kontak', content: '', layout: 'default', galleryImages: [] },
+  { id: 's-footer', type: 'footer', visible: true, title: '', content: '', layout: 'default', galleryImages: [] },
+];
+
 export const DEFAULT_SHARE_CONFIG: ShareConfig = {
+  // data lama
   theme: 'light',
   accent: 'emerald',
   columns: 3,
@@ -865,6 +997,73 @@ export const DEFAULT_SHARE_CONFIG: ShareConfig = {
   emptyText: 'Pengelola ini belum memublikasikan microsite apa pun.',
   micrositeMode: 'all',
   micrositeIds: [],
+  // v2
+  version: 2,
+  template: 'minimalist',
+  identity: {
+    dashboardName: '',
+    ownerName: '',
+    logoUrl: '',
+    coverUrl: '',
+    description: '',
+    contactEmail: '',
+    contactPhone: '',
+    contactAddress: '',
+    socials: [],
+    extraInfo: [],
+  },
+  background: {
+    type: 'solid',
+    color: '',
+    gradientFrom: '',
+    gradientTo: '',
+    gradientAngle: 135,
+    imageUrl: '',
+    pattern: 'none',
+    overlayOpacity: 0,
+    imageOpacity: 30,
+    imageBlur: 'none',
+  },
+  typography: {
+    fontPairing: 'inherit',
+    headingScale: 'lg',
+    baseSize: 16,
+    headingWeight: 800,
+    lineHeight: 1.6,
+    letterSpacing: 'normal',
+    align: 'left',
+  },
+  colors: {
+    primary: 'auto',
+    secondary: 'auto',
+    accent: 'auto',
+    background: 'auto',
+    surface: 'auto',
+    text: 'auto',
+    muted: 'auto',
+    button: 'auto',
+    border: 'auto',
+  },
+  layout: {
+    container: 'normal',
+    columns: 3,
+    gap: 'md',
+    sectionSpacing: 'md',
+    cardSize: 'normal',
+    mobileColumns: 1,
+  },
+  card: {
+    style: 'elevated',
+    radius: 'lg',
+    imageRatio: 'wide',
+    showDescription: true,
+    showCategory: true,
+    showLinkCount: true,
+    showShareButton: true,
+    hoverLift: true,
+    featuredIds: [],
+  },
+  sections: DEFAULT_SHARE_SECTIONS,
 };
 
 export interface MicrositeAnalyticsEvent {

@@ -13,6 +13,7 @@ import { platformApi, DashboardPrefs } from '../services/platformApi';
 import { ShareConfig, DEFAULT_SHARE_CONFIG } from '../types';
 import { useToast } from '../context/ToastContext';
 import MicrositesManagement from '../pages/admin/MicrositesManagement';
+import ShareEditorScreen from './ShareEditorScreen';
 
 type Tab = 'overview' | 'microsites' | 'profile' | 'customize' | 'settings' | 'share';
 
@@ -62,6 +63,11 @@ export default function StudioApp() {
         <span className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
       </div>
     );
+  }
+
+  // Visual editor dashboard publik: layar penuh (tanpa chrome Studio).
+  if (pathname.startsWith('/studio/share/editor')) {
+    return <ShareEditorScreen />;
   }
 
   return (

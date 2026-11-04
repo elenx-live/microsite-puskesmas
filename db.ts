@@ -100,6 +100,9 @@ export function initDb(dbPath?: string): Database.Database {
   if (!userCols.includes('share_tagline')) db.exec('ALTER TABLE users ADD COLUMN share_tagline TEXT');
   if (!userCols.includes('share_title')) db.exec('ALTER TABLE users ADD COLUMN share_title TEXT');
   if (!userCols.includes('share_config')) db.exec('ALTER TABLE users ADD COLUMN share_config TEXT');
+  // Draft / riwayat konfigurasi dashboard publik (mode editing sebelum publish).
+  if (!userCols.includes('share_draft')) db.exec('ALTER TABLE users ADD COLUMN share_draft TEXT');
+  if (!userCols.includes('share_history')) db.exec('ALTER TABLE users ADD COLUMN share_history TEXT');
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_share_slug ON users(share_slug) WHERE share_slug IS NOT NULL AND share_slug <> ''");
 
   return db;
@@ -147,6 +150,8 @@ export interface DbUser {
   phone: string | null; bio: string | null;
   share_slug: string | null; share_enabled: number; share_tagline: string | null; share_title: string | null;
   share_config: string | null;
+  share_draft: string | null;
+  share_history: string | null;
   created_at: string; updated_at: string; last_login_at: string | null;
 }
 
@@ -195,6 +200,7 @@ export function updateUser(id: string, patch: Partial<DbUser> & { password?: str
     share_slug: 'share_slug', share_enabled: 'share_enabled',
     share_tagline: 'share_tagline', share_title: 'share_title',
     share_config: 'share_config',
+    share_draft: 'share_draft', share_history: 'share_history',
   };
   for (const [k, col] of Object.entries(map)) {
     if ((patch as any)[k] !== undefined) { fields.push(`${col} = @${col}`); params[col] = (patch as any)[k]; }

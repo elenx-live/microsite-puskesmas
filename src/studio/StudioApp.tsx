@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Globe2, UserCog, Palette, Settings, LogOut, Menu, X, Plus,
   Eye, MousePointerClick, FileText, ArrowRight, ExternalLink, Sparkles, ChevronRight,
+  Share2, Copy, Check,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -12,13 +13,14 @@ import { platformApi, DashboardPrefs } from '../services/platformApi';
 import { useToast } from '../context/ToastContext';
 import MicrositesManagement from '../pages/admin/MicrositesManagement';
 
-type Tab = 'overview' | 'microsites' | 'profile' | 'customize' | 'settings';
+type Tab = 'overview' | 'microsites' | 'profile' | 'customize' | 'settings' | 'share';
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode; href: string }[] = [
   { key: 'overview', label: 'Ringkasan', icon: <LayoutDashboard className="h-4 w-4" />, href: '/studio' },
   { key: 'microsites', label: 'Microsite Saya', icon: <Globe2 className="h-4 w-4" />, href: '/studio/microsites' },
   { key: 'customize', label: 'Kustomisasi', icon: <Palette className="h-4 w-4" />, href: '/studio/customize' },
   { key: 'profile', label: 'Profil', icon: <UserCog className="h-4 w-4" />, href: '/studio/profile' },
+  { key: 'share', label: 'Dashboard Publik', icon: <Share2 className="h-4 w-4" />, href: '/studio/share' },
   { key: 'settings', label: 'Pengaturan Akun', icon: <Settings className="h-4 w-4" />, href: '/studio/settings' },
 ];
 
@@ -42,6 +44,7 @@ export default function StudioApp() {
     : pathname.startsWith('/studio/microsites') ? 'microsites'
     : pathname.startsWith('/studio/customize') ? 'customize'
     : pathname.startsWith('/studio/profile') ? 'profile'
+    : pathname.startsWith('/studio/share') ? 'share'
     : pathname.startsWith('/studio/settings') ? 'settings'
     : 'overview';
 
@@ -184,6 +187,7 @@ export default function StudioApp() {
           {active === 'microsites' && <MicrositesManagement />}
           {active === 'customize' && <CustomizeTab />}
           {active === 'profile' && <ProfileTab />}
+          {active === 'share' && <ShareTab />}
           {active === 'settings' && <SettingsTab />}
         </main>
       </div>
@@ -571,6 +575,170 @@ function SettingsTab() {
         </p>
         <Button variant="danger" onClick={logout}><LogOut className="h-4 w-4" /> Keluar</Button>
       </div>
+    </div>
+  );
+}
+
+/* ── Dashboard Publik (share) ──────────────────────────────────────────── */
+function ShareTab() {
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [slug, setSlug] = useState('');
+  const [title, setTitle] = useState('');
+  const [tagline, setTagline] = useState('');
+  const [enabled, setEnabled] = useState(false);
+  const [saved, setSaved] = useState({ enabled: false, url: '' });
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/me/share', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const s = d?.share || {};
+        setSlug(s.slug || '');
+        setTitle(s.title || '');
+        setTagline(s.tagline || '');
+        setEnabled(!!s.enabled);
+        setSaved({ enabled: !!s.enabled, url: s.url || '' });
+      })
+      .catch(() => showToast('Gagal memuat pengaturan dashboard.', 'error'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/me/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ slug, title, tagline, enabled }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
+      const s = data.share || {};
+      setEnabled(!!s.enabled);
+      setSaved({ enabled: !!s.enabled, url: s.url || '' });
+      showToast(s.enabled ? 'Dashboard publik aktif & siap dibagikan.' : 'Pengaturan dashboard disimpan.', 'success');
+    } catch (e: any) {
+      showToast(e?.message || 'Gagal menyimpan pengaturan.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fullUrl = saved.url ? `${window.location.origin}${saved.url}` : '';
+  const shareNow = async () => {
+    if (!fullUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: title || 'Dashboard Microsite', url: fullUrl });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+      showToast('Link dashboard tersalin.', 'success');
+    } catch {
+      showToast('Tidak bisa menyalin link.', 'warning');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
+        Memuat…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">Dashboard Publik</h1>
+        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+          Buat satu halaman publik berisi kumpulan microsite Anda, lalu bagikan link-nya. Halaman ini
+          tidak muncul di navigasi utama — hanya lewat link yang Anda bagikan.
+        </p>
+      </div>
+
+      <div className="studio-card max-w-2xl space-y-4 p-6">
+        <Input
+          label="Slug dashboard (untuk URL)"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+          placeholder="mis. puskesmas-manding"
+        />
+        <p className="-mt-2 text-xs text-[var(--color-muted-foreground)]">
+          Link Anda:{' '}
+          <span className="block break-all font-mono text-[var(--color-text)]">
+            {window.location.origin}/share/{slug || '…'}
+          </span>
+        </p>
+        <Input
+          label="Judul dashboard (opsional)"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="mis. Kumpulan Portal Puskesmas Manding"
+        />
+        <Input
+          label="Tagline / deskripsi singkat (opsional)"
+          value={tagline}
+          onChange={(e) => setTagline(e.target.value)}
+          placeholder="mis. Semua layanan & program dalam satu tautan."
+        />
+
+        <label className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-muted)]/40 p-3">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="h-4 w-4 accent-[var(--color-primary)]"
+          />
+          <span className="text-sm">
+            <b className="font-semibold">Aktifkan dashboard publik</b>
+            <span className="block text-[var(--color-muted-foreground)]">
+              Hanya microsite berstatus <i>published</i> yang akan tampil.
+            </span>
+          </span>
+        </label>
+
+        <div className="flex justify-end">
+          <Button onClick={save} isLoading={saving}>Simpan</Button>
+        </div>
+      </div>
+
+      {saved.enabled && (
+        <div className="studio-card max-w-2xl space-y-3 p-6">
+          <div className="flex items-center gap-2">
+            <Badge variant="emerald" size="sm">
+              <Check className="mr-1 h-3.5 w-3.5" /> Aktif
+            </Badge>
+            <span className="text-sm font-semibold">Dashboard publik Anda siap dibagikan</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-muted)] px-3 py-2 text-xs">
+              {fullUrl}
+            </code>
+            <Button variant="outline" size="sm" onClick={shareNow}>
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Tersalin' : 'Salin / Bagikan'}
+            </Button>
+            <a
+              href={saved.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-[var(--button-radius)] border border-[var(--color-border-strong)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition-all hover:bg-[var(--color-muted)]"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Lihat
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

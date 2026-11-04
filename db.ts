@@ -265,7 +265,16 @@ export function getMicrositeBySlug(slug: string): any | undefined {
 function rowToEntity(row: DbMicrosite): any {
   try {
     const entity = JSON.parse(row.data);
-    return { ...entity, id: row.id, slug: row.slug, ownerId: row.owner_id };
+    // Kolom DB adalah sumber kebenaran untuk status & flag aktif — pastikan
+    // selalu ada di keluaran (rekaman lama mungkin belum punya di JSON).
+    return {
+      ...entity,
+      id: row.id,
+      slug: row.slug,
+      ownerId: row.owner_id,
+      status: row.status ?? entity.status,
+      active: Number(row.active) === 1,
+    };
   } catch {
     return { id: row.id, slug: row.slug, ownerId: row.owner_id, name: row.name, status: row.status, active: !!row.active };
   }

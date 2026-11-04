@@ -457,7 +457,10 @@ export const micrositeService = {
   async getPublishedAndActiveMicrosites(): Promise<MicrositeEntity[]> {
     const list = await fetchMicrosites();
     return list
-      .filter(m => m.status === 'published' && m.active)
+      // Status 'published' wajib. Untuk flag aktif: hormati `active === false`
+      // (artinya sengaja dinonaktifkan), tetapi rekaman lama yang belum punya
+      // flag `active` tetap dianggap aktif agar tidak "hilang" dari direktori.
+      .filter(m => m.status === 'published' && (m as any).active !== false)
       .map(m => {
         const { password, ...safeItem } = m;
         return safeItem as MicrositeEntity;

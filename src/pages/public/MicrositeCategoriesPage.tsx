@@ -20,6 +20,8 @@ import {
 
 const catKey = (c?: string | null) => (c || 'Umum').trim().toLowerCase();
 const isGeneral = (c?: string | null) => catKey(c) === 'umum';
+/** Label kartu penampung untuk microsite yang kategorinya di luar daftar resmi. */
+const OTHER_LABEL = 'Lainnya';
 
 /**
  * Halaman direktori microsite v2 — "Aurora Klinis".
@@ -58,12 +60,36 @@ export default function MicrositeCategoriesPage() {
   };
 
   const inCategory = (m: MicrositeEntity, name: string) =>
-    catKey(m.category) === catKey(name) || (isGeneral(name) && !m.category);
+    name === OTHER_LABEL
+      ? !categories.some((c) => catKey(c.name) === catKey(m.category) || (isGeneral(c.name) && !m.category))
+      : catKey(m.category) === catKey(name) || (isGeneral(name) && !m.category);
+
+  /**
+   * Kategori yang ditampilkan = kategori resmi + kartu "Lainnya" bila ada
+   * microsite yang kategorinya di luar daftar resmi (agar tidak ada yang hilang).
+   */
+  const displayCategories = useMemo(() => {
+    const known = (m: MicrositeEntity) =>
+      categories.some(
+        (c) => catKey(c.name) === catKey(m.category) || (isGeneral(c.name) && !m.category),
+      );
+    const hasOther = microsites.some((m) => !known(m));
+    return hasOther
+      ? [
+          ...categories,
+          {
+            name: OTHER_LABEL,
+            description:
+              'Microsite dengan kategori khusus lainnya yang belum terdaftar sebagai kategori resmi.',
+          } as MicrositeCategory,
+        ]
+      : categories;
+  }, [categories, microsites]);
 
   const metrics = useMemo(() => {
     const links = microsites.reduce((n, m) => n + (m.links?.length || 0), 0);
-    return { categories: categories.length, microsites: microsites.length, links };
-  }, [categories, microsites]);
+    return { categories: displayCategories.length, microsites: microsites.length, links };
+  }, [displayCategories, microsites]);
 
   const matchesQuery = (m: MicrositeEntity, q: string) => {
     if (!q) return true;
@@ -222,7 +248,7 @@ export default function MicrositeCategoriesPage() {
             />
           ) : (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              {categories.map((cat, idx) => {
+              {displayCategories.map((cat, idx) => {
                 const items = microsites.filter((m) => inCategory(m, cat.name));
                 const links = items.reduce((n, m) => n + (m.links?.length || 0), 0);
                 const preview = items
@@ -238,7 +264,7 @@ export default function MicrositeCategoriesPage() {
                     style={{ animationDelay: `${Math.min(idx, 6) * 45}ms` }}
                     className={
                       'studio-card studio-card-interactive studio-rise group flex cursor-pointer flex-col gap-4 p-6 text-left' +
-                      (idx === categories.length - 1 && categories.length % 2 === 1
+                      (idx === displayCategories.length - 1 && displayCategories.length % 2 === 1
                         ? ' md:col-span-2'
                         : '')
                     }
@@ -259,7 +285,11 @@ export default function MicrositeCategoriesPage() {
                         aria-hidden
                         className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-secondary)] text-[var(--color-primary)] transition-transform duration-300 group-hover:scale-105"
                       >
-                        <Globe className="h-5 w-5" />
+                        {cat.name === OTHER_LABEL ? (
+                          <Sparkles className="h-5 w-5" />
+                        ) : (
+                          <Globe className="h-5 w-5" />
+                        )}
                       </span>
                       <div className="min-w-0">
                         <h3 className="font-display text-xl font-bold leading-tight text-[var(--color-text)] transition-colors group-hover:text-[var(--color-primary)]">

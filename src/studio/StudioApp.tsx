@@ -605,9 +605,17 @@ function ToggleRow({ checked, onChange, title, desc }: { checked: boolean; onCha
 function ShareTab() {
   const navigate = useNavigate();
   // Akses langsung: /studio/share?edit=1 → buka editor visual dashboard utama.
+  // Resolusi id dashboard utama diperlukan agar editor mengedit dashboard yang
+  // SAMA dengan yang dibaca halaman publik (bukan dashboard legacy users.share_*).
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('edit') === '1') {
-      navigate('/studio/share/editor', { replace: true });
+      fetch('/api/me/dashboards', { credentials: 'include' })
+        .then((r) => r.json())
+        .then((j) => {
+          const first = j?.dashboards?.[0]?.id;
+          navigate(first ? `/studio/share/editor/${first}` : '/studio/share/editor', { replace: true });
+        })
+        .catch(() => navigate('/studio/share/editor', { replace: true }));
     }
   }, [navigate]);
   return <DashboardsManager />;

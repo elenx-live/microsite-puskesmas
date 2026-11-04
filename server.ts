@@ -493,68 +493,85 @@ app.post('/api/me/password', express.json(), (req, res) => {
 
 // Profil pengguna sendiri (update).
 // ── Dashboard publik pengelola (/share/<slug>) ──────────────────────────────
+// CATATAN PENTING: endpoint legacy /api/me/share* DULU menulis ke kolom
+// users.share_* — tetapi halaman publik sekarang membaca tabel `dashboards`.
+// Agar editor tanpa-id (?edit=1) tetap sinkron dengan yang dibaca publik,
+// SEMUA endpoint legacy di bawah DIDELEGASIKAN ke dashboard utama pengguna
+// (dashboards baris pertama). Ini mencegah bug "edit tersimpan tapi publik
+// tidak berubah" akibat tulisan jatuh ke kolom users.share_* yang tidak dibaca.
+function primaryDashboardFor(u: store.DbUser): store.DbDashboard {
+  return ensurePrimaryDashboard(u);
+}
+
 // Kelola pengaturan share (opt-in): slug, judul, tagline, aktif/tidak.
 app.get('/api/me/share', (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
-  return res.json({ success: true, share: shareSettings(u) });
+  try {
+    return res.json({ success: true, share: dashboardDetail(primaryDashboardFor(u)) });
+  } catch {
+    return res.json({ success: true, share: shareSettings(u) });
+  }
 });
 
 app.post('/api/me/share', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
+    const d = primaryDashboardFor(u);
     const b = req.body || {};
     const patch: any = {};
     if (b.slug !== undefined) {
       const slug = String(b.slug).trim().toLowerCase();
-      if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+      if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
         return res.status(400).json({ error: 'Slug hanya huruf kecil, angka, dan tanda hubung (3–60 karakter).' });
       }
-      if (slug && store.isShareSlugTaken(slug, u.id)) {
+      if (slug && store.isDashboardSlugTaken(slug, d.id, u.id)) {
         return res.status(409).json({ error: 'Slug dashboard itu sudah dipakai. Pilih yang lain.' });
       }
-      patch.share_slug = slug || null;
+      patch.slug = slug || null;
     }
-    if (b.enabled !== undefined) patch.share_enabled = b.enabled ? 1 : 0;
-    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
-    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
-    if (b.config !== undefined) patch.share_config = JSON.stringify(sanitizeShareConfig(b.config));
+    if (b.enabled !== undefined) patch.enabled = b.enabled ? 1 : 0;
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
+    if (b.config !== undefined) patch.config = JSON.stringify(sanitizeShareConfig(b.config));
 
-    // Aktifkan tanpa slug → tolak (butuh slug dulu).
-    if (patch.share_enabled === 1 && !(patch.share_slug ?? u.share_slug)) {
+    if (patch.enabled === 1 && !(patch.slug ?? d.slug)) {
       return res.status(400).json({ error: 'Isi slug dashboard dulu sebelum mengaktifkan.' });
     }
-    const updated = store.updateUser(u.id, patch);
-    store.audit({ actorId: u.id, actorEmail: u.email, action: 'update_share', ip: clientIp(req) });
-    return res.json({ success: true, share: shareSettings(updated) });
+    const updated = store.updateDashboard(d.id, patch)!;
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'update_share', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, share: dashboardDetail(updated) });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal menyimpan pengaturan dashboard publik.' });
   }
 });
 
-/* ── Draft / Publish / Riwayat dashboard publik (visual editor) ────── */
+/* ── Draft / Publish / Riwayat dashboard publik (visual editor) ──────
+   Semua endpoint legacy kini bekerja pada DASHBOARD UTAMA pengguna agar
+   sinkron dengan halaman publik (yang membaca tabel dashboards). */
 
 // Simpan draft (autosave / manual) — tidak memengaruhi halaman publik.
 app.post('/api/me/share/draft', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
+    const d = primaryDashboardFor(u);
     const b = req.body || {};
     const clean = sanitizeShareConfig(b.config || b);
-    const patch: any = { share_draft: JSON.stringify(clean) };
-    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
-    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
+    const patch: any = { draft: JSON.stringify(clean) };
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
     if (b.slug !== undefined) {
       const slug = String(b.slug).trim().toLowerCase();
-      if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+      if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
         return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
       }
-      if (slug && store.isShareSlugTaken(slug, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
-      patch.share_slug = slug || null;
+      if (slug && store.isDashboardSlugTaken(slug, d.id, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+      patch.slug = slug || null;
     }
-    const updated = store.updateUser(u.id, patch);
-    return res.json({ success: true, draft: parseShareConfig(updated.share_draft), savedAt: updated.updated_at });
+    const updated = store.updateDashboard(d.id, patch)!;
+    return res.json({ success: true, draft: parseShareConfig(updated.draft), savedAt: updated.updated_at });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal menyimpan draft.' });
   }
@@ -565,31 +582,29 @@ app.post('/api/me/share/publish', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
+    const d = primaryDashboardFor(u);
     const b = req.body || {};
-    const next = sanitizeShareConfig(b.config || (u.share_draft ? JSON.parse(u.share_draft) : u.share_config ? JSON.parse(u.share_config) : {}));
-    const slug = (b.slug !== undefined ? String(b.slug).trim().toLowerCase() : (u.share_slug || '')).trim();
-    if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+    const next = sanitizeShareConfig(b.config || (d.draft ? JSON.parse(d.draft) : d.config ? JSON.parse(d.config) : {}));
+    const slug = (b.slug !== undefined ? String(b.slug).trim().toLowerCase() : (d.slug || '')).trim();
+    if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
       return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
     }
     if (!slug) return res.status(400).json({ error: 'Isi slug dashboard dulu sebelum menerbitkan.' });
-    if (store.isShareSlugTaken(slug, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+    if (store.isDashboardSlugTaken(slug, d.id, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
 
-    const prev = u.share_config ? { at: new Date().toISOString(), label: 'Sebelum terbit', config: parseShareConfig(u.share_config) } : null;
-    const history = parseShareHistory(u.share_history);
+    const prev = d.config ? { at: new Date().toISOString(), label: 'Sebelum terbit', config: parseShareConfig(d.config) } : null;
+    const history = parseShareHistory(d.history);
     const nextHistory = ([...(prev ? [prev] : []), ...history]).slice(0, 20);
 
     const patch: any = {
-      share_config: JSON.stringify(next),
-      share_slug: slug,
-      share_enabled: 1,
-      share_draft: null,
-      share_history: JSON.stringify(nextHistory),
+      config: JSON.stringify(next), slug, enabled: 1, draft: null,
+      history: JSON.stringify(nextHistory),
     };
-    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
-    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
-    const updated = store.updateUser(u.id, patch);
-    store.audit({ actorId: u.id, actorEmail: u.email, action: 'publish_share', ip: clientIp(req) });
-    return res.json({ success: true, share: shareSettings(updated) });
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
+    const updated = store.updateDashboard(d.id, patch)!;
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'publish_share', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, share: dashboardDetail(updated) });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal menerbitkan dashboard.' });
   }
@@ -600,9 +615,10 @@ app.post('/api/me/share/unpublish', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
-    const updated = store.updateUser(u.id, { share_enabled: 0 });
-    store.audit({ actorId: u.id, actorEmail: u.email, action: 'unpublish_share', ip: clientIp(req) });
-    return res.json({ success: true, share: shareSettings(updated) });
+    const d = primaryDashboardFor(u);
+    const updated = store.updateDashboard(d.id, { enabled: 0 })!;
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'unpublish_share', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, share: dashboardDetail(updated) });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal menonaktifkan dashboard.' });
   }
@@ -613,8 +629,9 @@ app.post('/api/me/share/discard-draft', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
-    const updated = store.updateUser(u.id, { share_draft: null });
-    return res.json({ success: true, share: shareSettings(updated) });
+    const d = primaryDashboardFor(u);
+    const updated = store.updateDashboard(d.id, { draft: null })!;
+    return res.json({ success: true, share: dashboardDetail(updated) });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal membuang draft.' });
   }
@@ -625,16 +642,16 @@ app.post('/api/me/share/restore', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;
   try {
+    const d = primaryDashboardFor(u);
     const idx = Number(req.body?.index);
-    const history = parseShareHistory(u.share_history);
+    const history = parseShareHistory(d.history);
     if (!Number.isInteger(idx) || idx < 0 || idx >= history.length) {
       return res.status(400).json({ error: 'Riwayat tidak ditemukan.' });
     }
     const restored = sanitizeShareConfig(history[idx].config);
-    const patch: any = { share_config: JSON.stringify(restored), share_draft: null };
-    const updated = store.updateUser(u.id, patch);
-    store.audit({ actorId: u.id, actorEmail: u.email, action: 'restore_share', ip: clientIp(req) });
-    return res.json({ success: true, share: shareSettings(updated) });
+    const updated = store.updateDashboard(d.id, { config: JSON.stringify(restored), draft: null })!;
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'restore_share', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, share: dashboardDetail(updated) });
   } catch (e: any) {
     return res.status(500).json({ error: 'Gagal memulihkan versi.' });
   }

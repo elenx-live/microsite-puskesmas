@@ -281,6 +281,21 @@
   .html-safe-content img { max-width: 100%; height: auto; border-radius: 1rem; border: 1px solid var(--color-border); margin: 1.25rem 0; }
   .html-safe-content code { background-color: var(--color-bg); border: 1px solid var(--color-border); padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-size: 0.85em; font-family: ui-monospace, monospace; color: var(--color-primary); }
 
+  /* ── Grid dashboard publik: kolom desktop vs mobile ─────────────────
+   * Desktop memakai --sh-cols, layar sempit (<=640px) memakai
+   * --sh-mobile-cols. Nilai di-set dari config dashboard (ShareDashboardPage /
+   * ShareEditor) sehingga pengaturan "kolom mobile" benar-benar diterapkan. */
+  .share-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--sh-cols, 3), minmax(0, 1fr));
+    gap: var(--sh-gap, 1.25rem);
+  }
+  @media (max-width: 640px) {
+    .share-grid {
+      grid-template-columns: repeat(var(--sh-mobile-cols, 1), minmax(0, 1fr));
+    }
+  }
+
   /* ── Gerak dibatasi bila pengguna minta reduced motion ────────────── */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

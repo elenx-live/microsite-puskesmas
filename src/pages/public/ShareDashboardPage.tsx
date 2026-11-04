@@ -163,7 +163,11 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
   const featured = microsites.filter((m) => featuredIds.includes(m.id) || featuredIds.includes(m.slug));
 
   const containerStyle: React.CSSProperties = { maxWidth: 'var(--sh-container)', marginInline: 'auto', paddingInline: '20px' };
-  const gridStyle = (cols: number): React.CSSProperties => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 'var(--sh-gap)' });
+  const gridStyle = (): React.CSSProperties => ({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(var(--sh-cols, 3), minmax(0,1fr))',
+    gap: 'var(--sh-gap)',
+  });
 
   const doShare = async () => {
     const url = `${window.location.origin}/share/${slug}`;
@@ -212,17 +216,15 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
     <h2 className="mb-5" style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h2)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)' }}>{children}</h2>
   );
 
-  const renderGrid = (items: MicrositeEntity[], cols: number, layout: string) => {
+  const renderGrid = (items: MicrositeEntity[], layout: string) => {
     if (!items.length) {
       return <div className="rounded-2xl border border-dashed py-14 text-center text-sm" style={{ borderColor: 'var(--sh-border)', color: 'var(--sh-muted)' }}>{cfg.emptyText}</div>;
     }
     if (layout === 'list') {
       return <div className="flex flex-col" style={{ gap: 'var(--sh-gap)' }}>{items.map((m) => <MicrositeCard key={m.id} m={m} cfg={cfg} />)}</div>;
     }
-    return <div className="share-grid" style={gridStyle(cols)}>{items.map((m) => <MicrositeCard key={m.id} m={m} cfg={cfg} />)}</div>;
+    return <div className="share-grid" style={{ gap: 'var(--sh-gap)' }}>{items.map((m) => <MicrositeCard key={m.id} m={m} cfg={cfg} />)}</div>;
   };
-
-  const cols = Number(cfg.layout?.columns || 3);
 
   return (
     <PublicLayout bare>
@@ -319,7 +321,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
                 {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
-                {renderGrid(featured, Math.min(cols, 3), sec.layout === 'grid' ? 'grid' : sec.layout)}
+                {renderGrid(featured, sec.layout === 'grid' ? 'grid' : sec.layout)}
               </section>
             );
           }
@@ -328,7 +330,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
                 {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
-                {renderGrid(microsites, cols, sec.layout)}
+                {renderGrid(microsites, sec.layout)}
               </section>
             );
           }
@@ -350,7 +352,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
                 {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
-                <div className="share-grid" style={gridStyle(3)}>
+                <div className="share-grid" style={gridStyle()}>
                   {imgs.map((src, i) => <img key={i} src={src} alt="" loading="lazy" className="aspect-square w-full object-cover" style={{ borderRadius: 'var(--sh-radius)' }} />)}
                 </div>
               </section>

@@ -206,6 +206,13 @@ export default function ShareEditor({ onExit, user, onNotify, dashboardId, dashb
     } finally { setPublishing(false); }
   }, [cfg, slug, title, tagline, name, notify, apiBase]);
 
+  /* Simpan = terapkan. Dashboard terbit → publish (langsung tampil di halaman publik).
+     Dashboard masih draft → cukup simpan draft. */
+  const apply = useCallback(async () => {
+    if (enabled) return publish();
+    return saveDraft(false);
+  }, [enabled, publish, saveDraft]);
+
   const unpublish = useCallback(async () => {
     try {
       const r = await fetch(`${apiBase}/unpublish`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
@@ -323,12 +330,13 @@ export default function ShareEditor({ onExit, user, onNotify, dashboardId, dashb
           {hasDraft && (
             <button onClick={discardDraft} title="Buang draft" className="hidden items-center gap-1.5 rounded-lg border border-amber-200 px-3 py-2 text-[13px] font-semibold text-amber-700 hover:bg-amber-50 sm:inline-flex"><Undo2 className="h-4 w-4" /> Buang draft</button>
           )}
-          <button onClick={() => saveDraft(false)} className="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-semibold hover:bg-slate-50 sm:inline-flex"><Save className="h-4 w-4" /> Simpan</button>
+          <button onClick={() => saveDraft(false)} className="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-semibold hover:bg-slate-50 sm:inline-flex"><Save className="h-4 w-4" /> Simpan draft</button>
           {enabled && slug && (
             <a href={`/share/${slug}`} target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-semibold hover:bg-slate-50 lg:inline-flex"><ExternalLink className="h-4 w-4" /> Buka</a>
           )}
-          <button onClick={publish} disabled={publishing} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-[13px] font-bold text-white hover:bg-emerald-700 disabled:opacity-60">
-            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />} Terbitkan
+          <button onClick={apply} disabled={publishing} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-[13px] font-bold text-white hover:bg-emerald-700 disabled:opacity-60" title={enabled ? 'Terapkan perubahan ke halaman publik' : 'Terbitkan dashboard'}>
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : enabled ? <Save className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
+            {enabled ? 'Simpan & Terapkan' : 'Terbitkan'}
           </button>
         </div>
       </header>

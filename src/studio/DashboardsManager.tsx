@@ -263,96 +263,93 @@ export default function DashboardsManager({ showToast }: Props) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((d) => (
-            <div key={d.id} className="studio-card group relative flex flex-col overflow-hidden">
-              {/* Thumbnail */}
-              <button onClick={() => navigate(`/studio/share/editor/${d.id}`)} className="relative block text-left">
-                <ThemeSwatch themeId={d.thumb || d.theme || ''} className="h-36 w-full" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between p-2.5">
-                  <span className={[
-                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide shadow-sm',
-                    d.enabled ? 'bg-emerald-500 text-white' : 'bg-slate-700/80 text-white',
-                  ].join(' ')}>
-                    {d.enabled ? <Globe2 className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-                    {d.enabled ? 'Terbit' : 'Draft'}
-                  </span>
-                  {d.hasDraft && !d.enabled && (
-                    <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-950 shadow-sm">Draft baru</span>
-                  )}
-                </div>
-              </button>
-
-              {/* Info */}
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+            <div key={d.id} className="studio-card group relative flex flex-col gap-3 p-4">
+              {/* Judul + badge status + menu */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <button onClick={() => navigate(`/studio/share/editor/${d.id}`)} className="block max-w-full text-left">
                     <h3 className="truncate font-display text-sm font-bold" title={d.name}>{d.name}</h3>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-muted-foreground)]">
-                      {d.tagline || d.title || 'Tanpa deskripsi.'}
-                    </p>
-                  </div>
-                  {/* Menu aksi */}
-                  <div className="relative">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === d.id ? null : d.id); }}
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-muted)]"
-                      title="Menu tindakan"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                    {menuFor === d.id && (
-                      <div className="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 text-sm shadow-xl">
-                        {[
-                          { icon: <Pencil className="h-4 w-4" />, label: 'Edit Dashboard', on: () => navigate(`/studio/share/editor/${d.id}`) },
-                          { icon: <Eye className="h-4 w-4" />, label: 'Preview', on: () => d.url ? window.open(fullUrl(d), '_blank') : notify('Publikasikan dulu untuk preview.', 'info') },
-                          { icon: <ExternalLink className="h-4 w-4" />, label: 'Buka Halaman Publik', on: () => d.url ? window.open(fullUrl(d), '_blank') : notify('Belum dipublikasikan.', 'info') },
-                          { icon: copied === d.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />, label: 'Salin URL', on: () => doCopy(d) },
-                          { icon: <Share2 className="h-4 w-4" />, label: 'Bagikan', on: () => doShare(d) },
-                          { icon: <Files className="h-4 w-4" />, label: 'Duplikasi Dashboard', on: () => doDuplicate(d) },
-                          { icon: <Settings2 className="h-4 w-4" />, label: 'Ganti Nama', on: () => doRename(d) },
-                          { icon: <Globe2 className="h-4 w-4" />, label: d.enabled ? 'Jadikan Draft' : 'Terbitkan', on: () => doTogglePublish(d) },
-                          { icon: <Trash2 className="h-4 w-4" />, label: 'Hapus Dashboard', on: () => doDelete(d), danger: true },
-                        ].map((item: any) => (
-                          <button
-                            key={item.label}
-                            onClick={(e) => { e.stopPropagation(); setMenuFor(null); item.on(); }}
-                            className={[
-                              'flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--color-muted)]',
-                              item.danger ? 'text-[var(--color-danger)]' : '',
-                            ].join(' ')}
-                          >
-                            {item.icon} {item.label}
-                          </button>
-                        ))}
-                      </div>
+                  </button>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span className={[
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                      d.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600',
+                    ].join(' ')}>
+                      {d.enabled ? <Globe2 className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                      {d.enabled ? 'Terbit' : 'Draft'}
+                    </span>
+                    {d.hasDraft && !d.enabled && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">Draft baru</span>
                     )}
+                    {d.category && <span className="text-[11px] text-[var(--color-muted-foreground)]">{d.category}</span>}
                   </div>
                 </div>
-
-                {/* URL / kategori */}
-                <div className="mt-auto space-y-1.5">
-                  {d.url ? (
-                    <div className="flex items-center gap-1.5">
-                      <code className="min-w-0 flex-1 truncate rounded bg-[var(--color-muted)] px-2 py-1 font-mono text-[11px] text-[var(--color-muted-foreground)]">/share/{d.slug}</code>
-                      <button onClick={() => doCopy(d)} className="grid h-7 w-7 place-items-center rounded border border-[var(--color-border)] hover:bg-[var(--color-muted)]" title="Salin URL">
-                        {copied === d.id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                      </button>
+                {/* Menu aksi */}
+                <div className="relative shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === d.id ? null : d.id); }}
+                    className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-muted)]"
+                    title="Menu tindakan"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                  {menuFor === d.id && (
+                    <div className="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 text-sm shadow-xl">
+                      {[
+                        { icon: <Pencil className="h-4 w-4" />, label: 'Edit Dashboard', on: () => navigate(`/studio/share/editor/${d.id}`) },
+                        { icon: <Eye className="h-4 w-4" />, label: 'Preview', on: () => d.url ? window.open(fullUrl(d), '_blank') : notify('Publikasikan dulu untuk preview.', 'info') },
+                        { icon: <ExternalLink className="h-4 w-4" />, label: 'Buka Halaman Publik', on: () => d.url ? window.open(fullUrl(d), '_blank') : notify('Belum dipublikasikan.', 'info') },
+                        { icon: copied === d.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />, label: 'Salin URL', on: () => doCopy(d) },
+                        { icon: <Share2 className="h-4 w-4" />, label: 'Bagikan', on: () => doShare(d) },
+                        { icon: <Files className="h-4 w-4" />, label: 'Duplikasi Dashboard', on: () => doDuplicate(d) },
+                        { icon: <Settings2 className="h-4 w-4" />, label: 'Ganti Nama', on: () => doRename(d) },
+                        { icon: <Globe2 className="h-4 w-4" />, label: d.enabled ? 'Jadikan Draft' : 'Terbitkan', on: () => doTogglePublish(d) },
+                        { icon: <Trash2 className="h-4 w-4" />, label: 'Hapus Dashboard', on: () => doDelete(d), danger: true },
+                      ].map((item: any) => (
+                        <button
+                          key={item.label}
+                          onClick={(e) => { e.stopPropagation(); setMenuFor(null); item.on(); }}
+                          className={[
+                            'flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--color-muted)]',
+                            item.danger ? 'text-[var(--color-danger)]' : '',
+                          ].join(' ')}
+                        >
+                          {item.icon} {item.label}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    <span className="inline-block rounded bg-[var(--color-muted)] px-2 py-1 text-[11px] text-[var(--color-muted-foreground)]">Belum ada URL — atur slug di editor.</span>
                   )}
-                  <div className="flex items-center justify-between text-[11px] text-[var(--color-muted-foreground)]">
-                    <span>{d.category || 'Tanpa kategori'}</span>
-                    <span title={fmtDate(d.updatedAt)}>Diperbarui {fmtDate(d.updatedAt)}</span>
+                </div>
+              </div>
+
+              {/* Deskripsi */}
+              <p className="line-clamp-2 text-xs text-[var(--color-muted-foreground)]">
+                {d.tagline || d.title || 'Tanpa deskripsi.'}
+              </p>
+
+              {/* URL + waktu */}
+              <div className="mt-auto space-y-2">
+                {d.url ? (
+                  <div className="flex items-center gap-1.5">
+                    <code className="min-w-0 flex-1 truncate rounded bg-[var(--color-muted)] px-2 py-1 font-mono text-[11px] text-[var(--color-muted-foreground)]">/share/{d.slug}</code>
+                    <button onClick={() => doCopy(d)} className="grid h-7 w-7 place-items-center rounded border border-[var(--color-border)] hover:bg-[var(--color-muted)]" title="Salin URL">
+                      {copied === d.id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
                   </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" onClick={() => navigate(`/studio/share/editor/${d.id}`)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
-                    {d.url && (
-                      <a href={d.url} target="_blank" rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-[var(--button-radius)] border border-[var(--color-border-strong)] px-3 py-1.5 text-xs font-semibold transition-all hover:bg-[var(--color-muted)]">
-                        <ExternalLink className="h-3.5 w-3.5" /> Lihat
-                      </a>
-                    )}
-                  </div>
+                ) : (
+                  <span className="inline-block rounded bg-[var(--color-muted)] px-2 py-1 text-[11px] text-[var(--color-muted-foreground)]">Belum ada URL — atur slug di editor.</span>
+                )}
+                <div className="flex items-center justify-between text-[11px] text-[var(--color-muted-foreground)]">
+                  <span title={fmtDate(d.updatedAt)}>Diperbarui {fmtDate(d.updatedAt)}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => navigate(`/studio/share/editor/${d.id}`)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
+                  {d.url && (
+                    <a href={d.url} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-[var(--button-radius)] border border-[var(--color-border-strong)] px-3 py-1.5 text-xs font-semibold transition-all hover:bg-[var(--color-muted)]">
+                      <ExternalLink className="h-3.5 w-3.5" /> Lihat
+                    </a>
+                  )}
                 </div>
               </div>
               {busy === d.id && <div className="absolute inset-0 grid place-items-center bg-black/10"><span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" /></div>}

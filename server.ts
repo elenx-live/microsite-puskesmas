@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import sharp from "sharp";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
@@ -5382,6 +5383,95 @@ app.post("/api/upload-image", (req, res) => {
   } catch (err: any) {
     console.error("Error in /api/upload-image:", err);
     return res.status(500).json({ error: err.message || "Gagal memproses unggah gambar" });
+  }
+});
+
+/* ── Unggah gambar dashboard publik (latar/logo/cover) ───────────────────────
+   Menerima base64 (data URL) dari editor visual. Gambar OTOMATIS di-resize
+   dan dikompres di server (sharp) supaya tidak terlalu besar, lalu disimpan
+   ke public/uploads/share/. Nilai yang dikembalikan adalah URL relatif
+   (/uploads/share/...) — jadi gambar TIDAK disimpan sebagai base64 di DB. */
+const SHARE_UPLOADS_SUBDIR = "share";
+// Batas mentah (sebelum kompres) — jaga-jaga terhadap file raksasa.
+const SHARE_UPLOAD_RAW_LIMIT = 15 * 1024 * 1024;
+// Batas dimensi terpanjang & ukuran target setelah kompres.
+const SHARE_MAX_DIMENSION = 1920;   // latar/cover
+const SHARE_MAX_DIMENSION_LOGO = 512;
+const SHARE_TARGET_BYTES = 500 * 1024; // ~500KB target maksimum
+
+async function saveShareImage(buffer: Buffer, kind: string): Promise<{ url: string; bytes: number; width: number; height: number; format: string }> {
+  const isLogo = kind === "logo";
+  const maxDim = isLogo ? SHARE_MAX_DIMENSION_LOGO : SHARE_MAX_DIMENSION;
+  // Simpan hanya di public/uploads/share — server menyajikan /uploads dari sini.
+  const shareDir = path.join(process.cwd(), "public", "uploads", SHARE_UPLOADS_SUBDIR);
+  if (!fs.existsSync(shareDir)) fs.mkdirSync(shareDir, { recursive: true });
+
+  const safeKind = (kind || "img").replace(/[^a-z0-9]/gi, "").slice(0, 12) || "img";
+  const baseName = `share-${safeKind}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+  // sharp: autorotate (EXIF), resize agar sisi terpanjang <= maxDim (tanpa upscale),
+  // lalu encode berurutan sesuai target ukuran.
+  const pipeline = sharp(buffer, { failOn: "none" }).rotate().resize({
+    width: maxDim, height: maxDim, fit: "inside", withoutEnlargement: true,
+  });
+
+  // PNG transparan (logo) → jaga alpha; selain itu JPEG progresif.
+  let outBuf: Buffer;
+  let format: string;
+  let ext: string;
+  const meta = await pipeline.metadata().catch(() => null as any);
+  const hasAlpha = !!meta?.hasAlpha;
+
+  if (isLogo && hasAlpha) {
+    outBuf = await pipeline.png({ compressionLevel: 9, palette: true }).toBuffer();
+    format = "png"; ext = "png";
+  } else {
+    // Coba kualitas menurun hingga <= target (min q40).
+    let q = 80;
+    outBuf = await pipeline.jpeg({ quality: q, progressive: true, mozjpeg: true }).toBuffer();
+    while (outBuf.length > SHARE_TARGET_BYTES && q > 40) {
+      q -= 10;
+      outBuf = await pipeline.jpeg({ quality: q, progressive: true, mozjpeg: true }).toBuffer();
+    }
+    format = "jpeg"; ext = "jpg";
+  }
+
+  // Bila hasil JPEG masih lebih besar daripada sumber & sumber adalah webp jpeg ringan,
+  // tidak perlu tindakan khusus — ini jarang terjadi setelah resize.
+  const fileName = `${baseName}.${ext}`;
+  const target = path.join(shareDir, fileName);
+  fs.writeFileSync(target, outBuf);
+  const outMeta = await sharp(outBuf).metadata().catch(() => null as any);
+  return {
+    url: `/uploads/${SHARE_UPLOADS_SUBDIR}/${fileName}`,
+    bytes: outBuf.length,
+    width: outMeta?.width || 0,
+    height: outMeta?.height || 0,
+    format,
+  };
+}
+
+app.post("/api/share/upload", express.json({ limit: "20mb" }), async (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const { imageBase64, kind } = req.body || {};
+    if (!imageBase64 || typeof imageBase64 !== "string") {
+      return res.status(400).json({ error: "Data gambar wajib diisi." });
+    }
+    const m = imageBase64.match(/^data:image\/([a-z0-9.+-]+);base64,(.+)$/i);
+    if (!m) return res.status(400).json({ error: "Format gambar tidak dikenal." });
+    const buf = Buffer.from(m[2], "base64");
+    if (buf.length === 0) return res.status(400).json({ error: "Gambar kosong." });
+    if (buf.length > SHARE_UPLOAD_RAW_LIMIT) {
+      return res.status(413).json({ error: "Ukuran gambar terlalu besar (maks 15MB sebelum kompres)." });
+    }
+    const result = await saveShareImage(buf, String(kind || "background"));
+    store.audit({ actorId: u.id, actorEmail: u.email, action: "upload_share_image", targetType: "share_image", ip: clientIp(req) });
+    return res.json({ success: true, ...result });
+  } catch (err: any) {
+    console.error("Error in /api/share/upload:", err);
+    return res.status(500).json({ error: err.message || "Gagal memproses gambar." });
   }
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShareConfig, ShareSectionType } from '../types';
 import { DASHBOARD_THEMES, COLOR_PRESETS, FONT_PAIRINGS, ThemeDef } from '../config/dashboardThemes';
-import { Field, TextInput, TextArea, Segmented, Select, Range, Toggle, Btn, ColorField } from './ShareEditor.controls';
+import { Field, TextInput, TextArea, Segmented, Select, Range, Toggle, Btn, ColorField, ImageUploadField } from './ShareEditor.controls';
 import { Plus, Trash2, Check, Eye } from 'lucide-react';
 
 export const SECTION_LABEL: Record<ShareSectionType, string> = {
@@ -97,8 +97,8 @@ export const IdentityPanel: React.FC<{
       <Field label="Nama pengelola"><TextInput value={id.ownerName} onChange={(v) => update((d) => { d.identity.ownerName = v; })} placeholder={owner?.name || 'Nama Anda'} maxLength={80} /></Field>
       <Field label="Deskripsi"><TextArea value={id.description} onChange={(v) => update((d) => { d.identity.description = v; })} placeholder="Tentang dashboard ini…" maxLength={400} /></Field>
 
-      <Field label="URL cover"><TextInput value={id.coverUrl} onChange={(v) => update((d) => { d.identity.coverUrl = v; })} placeholder="https://…" /></Field>
-      <Field label="URL logo"><TextInput value={id.logoUrl} onChange={(v) => update((d) => { d.identity.logoUrl = v; })} placeholder="https://…" /></Field>
+      <ImageUploadField label="Gambar cover" kind="cover" value={id.coverUrl} onChange={(v) => update((d) => { d.identity.coverUrl = v; })} hint="Gambar akan dikompres otomatis di server (maks ±1920px)." />
+      <ImageUploadField label="Logo" kind="logo" value={id.logoUrl} onChange={(v) => update((d) => { d.identity.logoUrl = v; })} hint="Logo disimpan kecil (maks ±512px) dan tetap tajam." />
 
       <Field label="Email kontak"><TextInput value={id.contactEmail} onChange={(v) => update((d) => { d.identity.contactEmail = v; })} placeholder="email@contoh.id" /></Field>
       <Field label="Telepon"><TextInput value={id.contactPhone} onChange={(v) => update((d) => { d.identity.contactPhone = v; })} placeholder="0812…" /></Field>
@@ -157,7 +157,7 @@ export const BackgroundPanel: React.FC<{ cfg: ShareConfig; update: Upd }> = ({ c
           <Range label="Sudut" value={b.gradientAngle} min={0} max={360} step={5} suffix="°" onChange={(v) => update((d) => { d.background.gradientAngle = v; })} />
         </>
       )}
-      {b.type === 'image' && <Field label="URL gambar"><TextInput value={b.imageUrl} onChange={(v) => update((d) => { d.background.imageUrl = v; })} placeholder="https://…" /></Field>}
+      {b.type === 'image' && <ImageUploadField label="Gambar latar" kind="background" value={b.imageUrl} onChange={(v) => update((d) => { d.background.imageUrl = v; })} hint="Disimpan di server & dikompres otomatis (maks ±1920px)." />}
       {b.type === 'pattern' && (
         <Field label="Motif">
           <Segmented value={b.pattern} cols={3} onChange={(v) => update((d) => { d.background.pattern = v; })}

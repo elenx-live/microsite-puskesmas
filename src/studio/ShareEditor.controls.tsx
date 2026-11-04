@@ -90,3 +90,88 @@ export const ColorField: React.FC<{ label: string; value: string; onChange: (v: 
     </div>
   );
 };
+
+/**
+ * Unggah gambar ke server (dikompres otomatis di server) + opsi tempel URL.
+ * `kind`: 'logo' | 'background' | 'cover' | 'avatar' — menentukan batas kompres.
+ */
+export const ImageUploadField: React.FC<{
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  kind?: string;
+  allowUrl?: boolean;
+  placeholder?: string;
+  hint?: string;
+}> = ({ label, value, onChange, kind = 'background', allowUrl = true, placeholder = 'https://…', hint }) => {
+  const [busy, setBusy] = React.useState(false);
+  const [msg, setMsg] = React.useState<string | null>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const pick = () => inputRef.current?.click();
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMsg(null);
+    if (!/^image\//.test(file.type)) { setMsg('Berkas harus berupa gambar.'); return; }
+    if (file.size > 15 * 1024 * 1024) { setMsg('Ukuran gambar maksimal 15MB.'); return; }
+    setBusy(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const r = await fetch('/api/share/upload', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: reader.result, kind }),
+        });
+        const j = await r.json();
+        if (!r.ok || !j.success) throw new Error(j.error || 'Gagal mengunggah');
+        onChange(j.url);
+        const kb = Math.max(1, Math.round((j.bytes || 0) / 1024));
+        setMsg(`Terupload & dikompres ke ${kb} KB (${j.width}×${j.height}).`);
+      } catch (err: any) {
+        setMsg(err.message || 'Gagal mengunggah gambar.');
+      } finally {
+        setBusy(false);
+        if (inputRef.current) inputRef.current.value = '';
+      }
+    };
+    reader.onerror = () => { setBusy(false); setMsg('Gagal membaca berkas.'); };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex items-start gap-3">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+          {value ? (
+            <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">kosong</div>
+          )}
+        </div>
+        <div className="flex-1">
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={pick} disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
+              {busy ? 'Mengunggah…' : 'Unggah gambar'}
+            </button>
+            {value && (
+              <button type="button" onClick={() => { onChange(''); setMsg(null); }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-[12px] font-bold text-rose-600 transition hover:bg-rose-50">
+                Hapus
+              </button>
+            )}
+          </div>
+          {allowUrl && (
+            <input value={value ?? ''} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-mono text-[11.5px] text-slate-700 outline-none focus:border-slate-400" />
+          )}
+          {msg && <p className="mt-1 text-[11px] leading-snug text-slate-500">{msg}</p>}
+        </div>
+      </div>
+    </Field>
+  );
+};

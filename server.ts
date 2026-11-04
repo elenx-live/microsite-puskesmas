@@ -234,6 +234,10 @@ function publicUser(u: store.DbUser) {
   return {
     id: u.id, email: u.email, name: u.name, role: u.role, status: u.status,
     avatarUrl: u.avatar_url, orgName: u.org_name, phone: u.phone, bio: u.bio,
+    shareSlug: u.share_slug || null,
+    shareEnabled: !!u.share_enabled,
+    shareTagline: u.share_tagline || null,
+    shareTitle: u.share_title || null,
     createdAt: u.created_at, lastLoginAt: u.last_login_at,
   };
 }
@@ -488,6 +492,160 @@ app.post('/api/me/password', express.json(), (req, res) => {
 });
 
 // Profil pengguna sendiri (update).
+// ── Dashboard publik pengelola (/share/<slug>) ──────────────────────────────
+// Kelola pengaturan share (opt-in): slug, judul, tagline, aktif/tidak.
+app.get('/api/me/share', (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  return res.json({ success: true, share: shareSettings(u) });
+});
+
+app.post('/api/me/share', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const b = req.body || {};
+    const patch: any = {};
+    if (b.slug !== undefined) {
+      const slug = String(b.slug).trim().toLowerCase();
+      if (slug && !/^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(slug)) {
+        return res.status(400).json({ error: 'Slug hanya huruf kecil, angka, dan tanda hubung (3–60 karakter).' });
+      }
+      if (slug && store.isShareSlugTaken(slug, u.id)) {
+        return res.status(409).json({ error: 'Slug dashboard itu sudah dipakai. Pilih yang lain.' });
+      }
+      patch.share_slug = slug || null;
+    }
+    if (b.enabled !== undefined) patch.share_enabled = b.enabled ? 1 : 0;
+    if (b.tagline !== undefined) patch.share_tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.share_title = String(b.title).slice(0, 120) || null;
+    if (b.config !== undefined) patch.share_config = JSON.stringify(sanitizeShareConfig(b.config));
+
+    // Aktifkan tanpa slug → tolak (butuh slug dulu).
+    if (patch.share_enabled === 1 && !(patch.share_slug ?? u.share_slug)) {
+      return res.status(400).json({ error: 'Isi slug dashboard dulu sebelum mengaktifkan.' });
+    }
+    const updated = store.updateUser(u.id, patch);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'update_share', ip: clientIp(req) });
+    return res.json({ success: true, share: shareSettings(updated) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menyimpan pengaturan dashboard publik.' });
+  }
+});
+
+/** Konfigurasi kustomisasi dashboard publik + nilai default aman. */
+const SHARE_CONFIG_DEFAULTS = {
+  theme: 'light' as 'light' | 'slate',
+  accent: 'emerald',
+  columns: 3 as 2 | 3 | 4,
+  showAvatar: true,
+  showBadge: true,
+  showStats: true,
+  showTagline: true,
+  showShareButton: true,
+  badgeLabel: 'Dashboard Pengelola',
+  emptyText: 'Pengelola ini belum memublikasikan microsite apa pun.',
+  micrositeMode: 'all' as 'all' | 'selected',
+  micrositeIds: [] as string[],
+};
+
+const ACCENT_KEYS = ['emerald', 'sky', 'violet', 'rose', 'amber', 'zinc'];
+
+/** Bersihkan/normalisasi config dari klien agar aman & konsisten. */
+function sanitizeShareConfig(raw: any) {
+  const c = raw && typeof raw === 'object' ? raw : {};
+  const bool = (v: any, def: boolean) => (v === undefined ? def : !!v);
+  const cols = [2, 3, 4].includes(Number(c.columns)) ? (Number(c.columns) as 2 | 3 | 4) : SHARE_CONFIG_DEFAULTS.columns;
+  const ids = Array.isArray(c.micrositeIds)
+    ? c.micrositeIds.map((x: any) => String(x)).filter(Boolean).slice(0, 200)
+    : [];
+  return {
+    theme: c.theme === 'slate' ? 'slate' : 'light',
+    accent: ACCENT_KEYS.includes(c.accent) ? c.accent : SHARE_CONFIG_DEFAULTS.accent,
+    columns: cols,
+    showAvatar: bool(c.showAvatar, true),
+    showBadge: bool(c.showBadge, true),
+    showStats: bool(c.showStats, true),
+    showTagline: bool(c.showTagline, true),
+    showShareButton: bool(c.showShareButton, true),
+    badgeLabel: String(c.badgeLabel ?? SHARE_CONFIG_DEFAULTS.badgeLabel).slice(0, 60),
+    emptyText: String(c.emptyText ?? SHARE_CONFIG_DEFAULTS.emptyText).slice(0, 300),
+    micrositeMode: c.micrositeMode === 'selected' ? 'selected' : 'all',
+    micrositeIds: ids,
+  };
+}
+
+function parseShareConfig(raw: string | null | undefined) {
+  let obj: any = {};
+  try { obj = raw ? JSON.parse(raw) : {}; } catch { obj = {}; }
+  return sanitizeShareConfig(obj);
+}
+
+function shareSettings(u: store.DbUser) {
+  const enabled = !!u.share_enabled && !!u.share_slug;
+  return {
+    slug: u.share_slug || '',
+    enabled,
+    tagline: u.share_tagline || '',
+    title: u.share_title || '',
+    url: enabled ? `/share/${u.share_slug}` : '',
+    config: parseShareConfig(u.share_config),
+  };
+}
+
+// Halaman publik /share/<slug> — profil pengelola + microsite published-nya.
+app.get('/api/public/share/:slug', (req, res) => {
+  try {
+    const owner = store.findUserByShareSlug(req.params.slug);
+    if (!owner) return res.status(404).json({ error: 'Dashboard tidak ditemukan.' });
+    const config = parseShareConfig(owner.share_config);
+    let microsites = store.listPublishedMicrositesByOwner(owner.id).map((m: any) => {
+      const { password, ...safe } = m;
+      return safe;
+    });
+    // Mode 'selected': tampilkan hanya microsite yang dipilih, urut sesuai pilihan.
+    if (config.micrositeMode === 'selected') {
+      const order = new Map(config.micrositeIds.map((id: string, i: number) => [id, i]));
+      microsites = microsites
+        .filter((m: any) => order.has(m.id) || order.has(m.slug))
+        .sort((a: any, b: any) => (order.get(a.id) ?? order.get(a.slug) ?? 0) - (order.get(b.id) ?? order.get(b.slug) ?? 0));
+    }
+    return res.json({
+      success: true,
+      owner: {
+        name: owner.name,
+        orgName: owner.org_name,
+        bio: owner.bio,
+        avatarUrl: owner.avatar_url,
+        phone: owner.phone,
+      },
+      share: {
+        slug: owner.share_slug,
+        title: owner.share_title || '',
+        tagline: owner.share_tagline || '',
+        config,
+      },
+      microsites,
+    });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal memuat dashboard.' });
+  }
+});
+
+// Daftar microsite published+aktif milik pengguna (untuk pemilih microsite di dashboard publik).
+app.get('/api/me/share/microsites', (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const items = store.listPublishedMicrositesByOwner(u.id).map((m: any) => ({
+      id: m.id, slug: m.slug, name: m.name || '', category: m.category || '', status: m.status,
+    }));
+    return res.json({ success: true, microsites: items });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal memuat daftar microsite.' });
+  }
+});
+
 app.post('/api/me/profile', express.json(), (req, res) => {
   const u = requireUser(req, res);
   if (!u) return;

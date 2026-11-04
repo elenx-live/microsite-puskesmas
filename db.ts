@@ -91,6 +91,17 @@ export function initDb(dbPath?: string): Database.Database {
       updated_at TEXT NOT NULL
     );
   `);
+
+  // Migrasi idempoten: kolom dashboard publik (share) per pengelola.
+  // share_slug UNIQUE (partial: hanya bila terisi) agar /share/<slug> unik.
+  const userCols = (db.prepare('PRAGMA table_info(users)').all() as any[]).map((c) => c.name);
+  if (!userCols.includes('share_slug')) db.exec('ALTER TABLE users ADD COLUMN share_slug TEXT');
+  if (!userCols.includes('share_enabled')) db.exec('ALTER TABLE users ADD COLUMN share_enabled INTEGER NOT NULL DEFAULT 0');
+  if (!userCols.includes('share_tagline')) db.exec('ALTER TABLE users ADD COLUMN share_tagline TEXT');
+  if (!userCols.includes('share_title')) db.exec('ALTER TABLE users ADD COLUMN share_title TEXT');
+  if (!userCols.includes('share_config')) db.exec('ALTER TABLE users ADD COLUMN share_config TEXT');
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_share_slug ON users(share_slug) WHERE share_slug IS NOT NULL AND share_slug <> ''");
+
   return db;
 }
 
@@ -134,6 +145,8 @@ export interface DbUser {
   role: 'admin' | 'pengelola'; status: 'active' | 'suspended' | 'archived';
   google_id: string | null; avatar_url: string | null; org_name: string | null;
   phone: string | null; bio: string | null;
+  share_slug: string | null; share_enabled: number; share_tagline: string | null; share_title: string | null;
+  share_config: string | null;
   created_at: string; updated_at: string; last_login_at: string | null;
 }
 
@@ -179,6 +192,9 @@ export function updateUser(id: string, patch: Partial<DbUser> & { password?: str
   const map: Record<string, string> = {
     name: 'name', role: 'role', status: 'status', org_name: 'org_name',
     phone: 'phone', bio: 'bio', avatar_url: 'avatar_url',
+    share_slug: 'share_slug', share_enabled: 'share_enabled',
+    share_tagline: 'share_tagline', share_title: 'share_title',
+    share_config: 'share_config',
   };
   for (const [k, col] of Object.entries(map)) {
     if ((patch as any)[k] !== undefined) { fields.push(`${col} = @${col}`); params[col] = (patch as any)[k]; }
@@ -244,6 +260,27 @@ export interface DbMicrosite {
 export function listMicrositesByOwner(ownerId: string): any[] {
   return (getDb().prepare('SELECT * FROM microsites WHERE owner_id = ? ORDER BY updated_at DESC').all(ownerId) as DbMicrosite[])
     .map(rowToEntity);
+}
+
+/** Microsite published+aktif milik satu pengelola (untuk dashboard publik /share/<slug>). */
+export function listPublishedMicrositesByOwner(ownerId: string): any[] {
+  return (getDb().prepare("SELECT * FROM microsites WHERE owner_id = ? AND status = 'published' AND active = 1 ORDER BY updated_at DESC").all(ownerId) as DbMicrosite[])
+    .map(rowToEntity);
+}
+
+/** Cari pengguna berdasarkan slug dashboard publik (hanya yang mengaktifkan share). */
+export function findUserByShareSlug(slug: string): DbUser | undefined {
+  const clean = String(slug || '').trim().toLowerCase();
+  if (!clean) return undefined;
+  return getDb().prepare("SELECT * FROM users WHERE share_slug = ? AND share_enabled = 1").get(clean) as DbUser | undefined;
+}
+
+/** Apakah slug dashboard publik sudah dipakai pengguna lain (selain excludeId). */
+export function isShareSlugTaken(slug: string, excludeId?: string): boolean {
+  const clean = String(slug || '').trim().toLowerCase();
+  if (!clean) return false;
+  const row = getDb().prepare('SELECT id FROM users WHERE share_slug = ?').get(clean) as { id: string } | undefined;
+  return !!row && row.id !== excludeId;
 }
 export function listAllMicrosites(): any[] {
   return (getDb().prepare('SELECT * FROM microsites ORDER BY updated_at DESC').all() as DbMicrosite[])

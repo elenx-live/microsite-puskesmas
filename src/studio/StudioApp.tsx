@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { platformApi, DashboardPrefs } from '../services/platformApi';
+import { ShareConfig, DEFAULT_SHARE_CONFIG } from '../types';
 import { useToast } from '../context/ToastContext';
 import MicrositesManagement from '../pages/admin/MicrositesManagement';
 
@@ -579,7 +580,21 @@ function SettingsTab() {
   );
 }
 
-/* ── Dashboard Publik (share) ──────────────────────────────────────────── */
+/* ── Dashboard Publik (share + kustomisasi) ───────────────────────────── */
+type SharePrefs = ShareConfig;
+
+function ToggleRow({ checked, onChange, title, desc }: { checked: boolean; onChange: (v: boolean) => void; title: string; desc?: string }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2.5 text-sm">
+      <input type="checkbox" className="h-4 w-4 accent-[var(--color-primary)]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>
+        <b className="font-semibold">{title}</b>
+        {desc && <span className="block text-[var(--color-muted-foreground)]">{desc}</span>}
+      </span>
+    </label>
+  );
+}
+
 function ShareTab() {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -588,23 +603,31 @@ function ShareTab() {
   const [title, setTitle] = useState('');
   const [tagline, setTagline] = useState('');
   const [enabled, setEnabled] = useState(false);
+  const [cfg, setCfg] = useState<SharePrefs>({ ...DEFAULT_SHARE_CONFIG });
   const [saved, setSaved] = useState({ enabled: false, url: '' });
   const [copied, setCopied] = useState(false);
+  const [published, setPublished] = useState<{ id: string; slug: string; name: string; category: string }[]>([]);
 
   useEffect(() => {
-    fetch('/api/me/share', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => {
+    Promise.all([
+      fetch('/api/me/share', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/me/share/microsites', { credentials: 'include' }).then((r) => r.json()).catch(() => ({ microsites: [] })),
+    ])
+      .then(([d, m]) => {
         const s = d?.share || {};
         setSlug(s.slug || '');
         setTitle(s.title || '');
         setTagline(s.tagline || '');
         setEnabled(!!s.enabled);
+        setCfg({ ...DEFAULT_SHARE_CONFIG, ...(s.config || {}) });
         setSaved({ enabled: !!s.enabled, url: s.url || '' });
+        setPublished(Array.isArray(m?.microsites) ? m.microsites : []);
       })
       .catch(() => showToast('Gagal memuat pengaturan dashboard.', 'error'))
       .finally(() => setLoading(false));
   }, []);
+
+  const set = (patch: Partial<SharePrefs>) => setCfg((c) => ({ ...c, ...patch }));
 
   const save = async () => {
     setSaving(true);
@@ -613,12 +636,13 @@ function ShareTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ slug, title, tagline, enabled }),
+        body: JSON.stringify({ slug, title, tagline, enabled, config: cfg }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan.');
       const s = data.share || {};
       setEnabled(!!s.enabled);
+      setCfg({ ...DEFAULT_SHARE_CONFIG, ...(s.config || {}) });
       setSaved({ enabled: !!s.enabled, url: s.url || '' });
       showToast(s.enabled ? 'Dashboard publik aktif & siap dibagikan.' : 'Pengaturan dashboard disimpan.', 'success');
     } catch (e: any) {
@@ -628,14 +652,29 @@ function ShareTab() {
     }
   };
 
+  const toggleMicrosite = (id: string) => {
+    setCfg((c) => {
+      const has = c.micrositeIds.includes(id);
+      return { ...c, micrositeIds: has ? c.micrositeIds.filter((x) => x !== id) : [...c.micrositeIds, id] };
+    });
+  };
+  const moveMicrosite = (id: string, dir: -1 | 1) => {
+    setCfg((c) => {
+      const arr = [...c.micrositeIds];
+      const i = arr.indexOf(id);
+      if (i < 0) return c;
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return c;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...c, micrositeIds: arr };
+    });
+  };
+
   const fullUrl = saved.url ? `${window.location.origin}${saved.url}` : '';
   const shareNow = async () => {
     if (!fullUrl) return;
     if (navigator.share) {
-      try {
-        await navigator.share({ title: title || 'Dashboard Microsite', url: fullUrl });
-        return;
-      } catch {}
+      try { await navigator.share({ title: title || 'Dashboard Microsite', url: fullUrl }); return; } catch {}
     }
     try {
       await navigator.clipboard.writeText(fullUrl);
@@ -646,6 +685,8 @@ function ShareTab() {
       showToast('Tidak bisa menyalin link.', 'warning');
     }
   };
+
+  const ACCENT_OPTS = ACCENTS.filter((a) => ['emerald', 'sky', 'violet', 'rose', 'amber'].includes(a.key));
 
   if (loading) {
     return (
@@ -661,12 +702,14 @@ function ShareTab() {
       <div>
         <h1 className="font-display text-2xl font-extrabold tracking-tight">Dashboard Publik</h1>
         <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-          Buat satu halaman publik berisi kumpulan microsite Anda, lalu bagikan link-nya. Halaman ini
-          tidak muncul di navigasi utama — hanya lewat link yang Anda bagikan.
+          Buat satu halaman publik berisi kumpulan microsite Anda, atur tampilannya, lalu bagikan link-nya.
+          Halaman ini tidak muncul di navigasi utama — hanya lewat link yang Anda bagikan.
         </p>
       </div>
 
-      <div className="studio-card max-w-2xl space-y-4 p-6">
+      {/* ── Pengaturan dasar ─────────────────────────────────────────── */}
+      <div className="studio-card max-w-3xl space-y-4 p-6">
+        <h2 className="font-display text-sm font-bold">Pengaturan Dasar</h2>
         <Input
           label="Slug dashboard (untuk URL)"
           value={slug}
@@ -679,41 +722,143 @@ function ShareTab() {
             {window.location.origin}/share/{slug || '…'}
           </span>
         </p>
-        <Input
-          label="Judul dashboard (opsional)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="mis. Kumpulan Portal Puskesmas Manding"
-        />
-        <Input
-          label="Tagline / deskripsi singkat (opsional)"
-          value={tagline}
-          onChange={(e) => setTagline(e.target.value)}
-          placeholder="mis. Semua layanan & program dalam satu tautan."
-        />
+        <Input label="Judul dashboard (opsional)" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="mis. Kumpulan Portal Puskesmas Manding" />
+        <Input label="Tagline / deskripsi singkat (opsional)" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="mis. Semua layanan & program dalam satu tautan." />
+        <ToggleRow checked={enabled} onChange={setEnabled} title="Aktifkan dashboard publik" desc="Hanya microsite berstatus published yang akan tampil." />
+      </div>
 
-        <label className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-muted)]/40 p-3">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            className="h-4 w-4 accent-[var(--color-primary)]"
-          />
-          <span className="text-sm">
-            <b className="font-semibold">Aktifkan dashboard publik</b>
-            <span className="block text-[var(--color-muted-foreground)]">
-              Hanya microsite berstatus <i>published</i> yang akan tampil.
-            </span>
-          </span>
-        </label>
+      {/* ── Kustomisasi tampilan ─────────────────────────────────────── */}
+      <div className="studio-card max-w-3xl space-y-5 p-6">
+        <h2 className="font-display text-sm font-bold">Kustomisasi Tampilan</h2>
 
-        <div className="flex justify-end">
-          <Button onClick={save} isLoading={saving}>Simpan</Button>
+        <div>
+          <span className="mb-2 block text-xs font-semibold text-[var(--color-muted-foreground)]">Warna aksen</span>
+          <div className="flex flex-wrap gap-3">
+            {ACCENT_OPTS.map((a) => (
+              <button
+                key={a.key}
+                onClick={() => set({ accent: a.key })}
+                className={[
+                  'flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
+                  cfg.accent === a.key
+                    ? 'border-[var(--color-primary)] bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]',
+                ].join(' ')}
+              >
+                <span className="h-4 w-4 rounded-full" style={{ background: a.color }} />
+                {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <span className="mb-2 block text-xs font-semibold text-[var(--color-muted-foreground)]">Mode tampilan</span>
+            <div className="flex gap-3">
+              {(['light', 'slate'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => set({ theme: t })}
+                  className={[
+                    'rounded-[var(--radius-sm)] border px-4 py-2 text-sm font-semibold transition-all',
+                    cfg.theme === t ? 'border-[var(--color-primary)] bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]' : 'border-[var(--color-border)]',
+                  ].join(' ')}
+                >
+                  {t === 'light' ? 'Terang' : 'Netral'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="mb-2 block text-xs font-semibold text-[var(--color-muted-foreground)]">Kolom grid microsite</span>
+            <div className="flex gap-3">
+              {([2, 3, 4] as const).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => set({ columns: n })}
+                  className={[
+                    'rounded-[var(--radius-sm)] border px-4 py-2 text-sm font-semibold transition-all',
+                    cfg.columns === n ? 'border-[var(--color-primary)] bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]' : 'border-[var(--color-border)]',
+                  ].join(' ')}
+                >
+                  {n} kolom
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <Input label="Label badge header" value={cfg.badgeLabel} onChange={(e) => set({ badgeLabel: e.target.value })} placeholder="mis. Dashboard Pengelola" />
+        <Input label="Teks saat belum ada microsite" value={cfg.emptyText} onChange={(e) => set({ emptyText: e.target.value })} placeholder="mis. Belum ada microsite publik." />
+
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-[var(--color-muted-foreground)]">Elemen yang ditampilkan</span>
+          <ToggleRow checked={cfg.showAvatar} onChange={(v) => set({ showAvatar: v })} title="Foto / avatar profil" />
+          <ToggleRow checked={cfg.showBadge} onChange={(v) => set({ showBadge: v })} title="Badge label di header" />
+          <ToggleRow checked={cfg.showStats} onChange={(v) => set({ showStats: v })} title="Statistik (jumlah microsite & tautan)" />
+          <ToggleRow checked={cfg.showTagline} onChange={(v) => set({ showTagline: v })} title="Tagline / deskripsi" />
+          <ToggleRow checked={cfg.showShareButton} onChange={(v) => set({ showShareButton: v })} title="Tombol 'Bagikan dashboard'" />
         </div>
       </div>
 
+      {/* ── Microsite yang ditampilkan ───────────────────────────────── */}
+      <div className="studio-card max-w-3xl space-y-4 p-6">
+        <h2 className="font-display text-sm font-bold">Microsite yang Ditampilkan</h2>
+        <div className="flex gap-3">
+          {(['all', 'selected'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => set({ micrositeMode: m })}
+              className={[
+                'rounded-[var(--radius-sm)] border px-4 py-2 text-sm font-semibold transition-all',
+                cfg.micrositeMode === m ? 'border-[var(--color-primary)] bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]' : 'border-[var(--color-border)]',
+              ].join(' ')}
+            >
+              {m === 'all' ? 'Semua microsite published' : 'Pilih manual'}
+            </button>
+          ))}
+        </div>
+
+        {cfg.micrositeMode === 'selected' && (
+          <div className="space-y-2">
+            {published.length === 0 ? (
+              <p className="text-sm text-[var(--color-muted-foreground)]">Belum ada microsite published milik Anda.</p>
+            ) : (
+              <>
+                <p className="text-xs text-[var(--color-muted-foreground)]">
+                  Centang untuk menampilkan, lalu atur urutannya. ({cfg.micrositeIds.length} dipilih)
+                </p>
+                {published.map((m) => {
+                  const on = cfg.micrositeIds.includes(m.id);
+                  return (
+                    <div key={m.id} className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-sm">
+                      <input type="checkbox" className="h-4 w-4 accent-[var(--color-primary)]" checked={on} onChange={() => toggleMicrosite(m.id)} />
+                      <span className="min-w-0 flex-1 truncate">
+                        <b className="font-semibold">{m.name || m.slug}</b>
+                        <span className="ml-2 text-xs text-[var(--color-muted-foreground)]">/{m.slug}{m.category ? ` · ${m.category}` : ''}</span>
+                      </span>
+                      {on && (
+                        <span className="flex items-center gap-1">
+                          <button onClick={() => moveMicrosite(m.id, -1)} className="rounded border border-[var(--color-border)] px-2 py-0.5 text-xs hover:bg-[var(--color-muted)]" title="Naik">↑</button>
+                          <button onClick={() => moveMicrosite(m.id, 1)} className="rounded border border-[var(--color-border)] px-2 py-0.5 text-xs hover:bg-[var(--color-muted)]" title="Turun">↓</button>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex max-w-3xl justify-end">
+        <Button onClick={save} isLoading={saving}>Simpan</Button>
+      </div>
+
       {saved.enabled && (
-        <div className="studio-card max-w-2xl space-y-3 p-6">
+        <div className="studio-card max-w-3xl space-y-3 p-6">
           <div className="flex items-center gap-2">
             <Badge variant="emerald" size="sm">
               <Check className="mr-1 h-3.5 w-3.5" /> Aktif

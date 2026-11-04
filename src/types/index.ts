@@ -836,6 +836,37 @@ export interface MicrositeCategory {
   description: string;
 }
 
+/** Konfigurasi kustomisasi dashboard publik /share/<slug>. */
+export interface ShareConfig {
+  theme: 'light' | 'slate';
+  accent: string;
+  columns: 2 | 3 | 4;
+  showAvatar: boolean;
+  showBadge: boolean;
+  showStats: boolean;
+  showTagline: boolean;
+  showShareButton: boolean;
+  badgeLabel: string;
+  emptyText: string;
+  micrositeMode: 'all' | 'selected';
+  micrositeIds: string[];
+}
+
+export const DEFAULT_SHARE_CONFIG: ShareConfig = {
+  theme: 'light',
+  accent: 'emerald',
+  columns: 3,
+  showAvatar: true,
+  showBadge: true,
+  showStats: true,
+  showTagline: true,
+  showShareButton: true,
+  badgeLabel: 'Dashboard Pengelola',
+  emptyText: 'Pengelola ini belum memublikasikan microsite apa pun.',
+  micrositeMode: 'all',
+  micrositeIds: [],
+};
+
 export interface MicrositeAnalyticsEvent {
   id: string;
   micrositeId: string;

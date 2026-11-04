@@ -153,7 +153,7 @@ export default function ShareDashboardPage() {
 
   if (loading) {
     return (
-      <PublicLayout>
+      <PublicLayout bare>
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-[var(--color-primary)]" />
@@ -166,7 +166,7 @@ export default function ShareDashboardPage() {
 
   if (notFound || !owner) {
     return (
-      <PublicLayout>
+      <PublicLayout bare>
         <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-5 px-4 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-[var(--radius-lg)] bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)]">
             <Compass className="h-8 w-8" />
@@ -198,7 +198,7 @@ export default function ShareDashboardPage() {
   const isDark = cfg.theme === 'slate';
 
   return (
-    <PublicLayout>
+    <PublicLayout bare>
       <div
         data-share-theme={cfg.theme}
         style={{ ['--share-accent' as any]: accentHex }}

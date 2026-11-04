@@ -6,14 +6,17 @@ import { useAuth } from '../../context/AuthContext';
 interface PublicLayoutProps {
   children: React.ReactNode;
   activeNav?: string;
+  /** Tanpa navbar; footer dikecilkan (tanpa logo). Untuk halaman yang dibagikan. */
+  bare?: boolean;
 }
 
 /**
  * Shell publik Studio v2 — "Aurora Klinis".
  * Header kaca mengambang, wordmark berkarakter, navigasi responsif dengan
  * menu mobile drawer, footer informatif. Semua warna lewat token tema.
+ * `bare` → tanpa header + footer ringkas tanpa logo (halaman share).
  */
-export const PublicLayout: React.FC<PublicLayoutProps> = ({ children, activeNav }) => {
+export const PublicLayout: React.FC<PublicLayoutProps> = ({ children, activeNav, bare }) => {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const onList = pathname === '/' || pathname.startsWith('/microsites');
@@ -69,6 +72,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children, activeNav 
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-bg)] text-[var(--color-text)]">
+      {!bare && (
       <header className="sticky top-0 z-40 border-b border-[var(--color-border)]/80 surface-glass">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Brand />
@@ -200,9 +204,19 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children, activeNav 
           </div>
         )}
       </header>
+      )}
 
       <div className="flex-1">{children}</div>
 
+      {bare ? (
+        <footer className="mt-auto border-t border-[var(--color-border)]">
+          <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              © {new Date().getFullYear()} Puskesmas Manding
+            </p>
+          </div>
+        </footer>
+      ) : (
       <footer className="mt-auto border-t border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-9 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2.5">
@@ -260,6 +274,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children, activeNav 
           </nav>
         </div>
       </footer>
+      )}
     </div>
   );
 };

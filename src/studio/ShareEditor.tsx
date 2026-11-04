@@ -18,6 +18,10 @@ interface ShareEditorProps {
   onExit: () => void;
   user: { name?: string; email?: string; orgName?: string | null; avatarUrl?: string | null; role?: string } | null;
   onNotify?: (msg: string, kind?: 'success' | 'error') => void;
+  /** ID dashboard yang diedit. Bila kosong → mode dashboard utama (kompatibel lama). */
+  dashboardId?: string;
+  /** Nama dashboard (judul di topbar). */
+  dashboardName?: string;
 }
 
 type Panel = 'template' | 'identity' | 'background' | 'typography' | 'colors' | 'layout' | 'card' | 'sections';
@@ -37,7 +41,10 @@ const PANELS: { key: Panel; label: string; icon: React.ReactNode }[] = [
   { key: 'sections', label: 'Section', icon: <ListTree className="h-4 w-4" /> },
 ];
 
-export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps) {
+export default function ShareEditor({ onExit, user, onNotify, dashboardId, dashboardName }: ShareEditorProps) {
+  // Basis URL API: multi (per-id) atau tunggal (dashboard utama).
+  const apiBase = dashboardId ? `/api/me/dashboards/${dashboardId}` : '/api/me/share';
+  const [name, setName] = useState(dashboardName || 'Dashboard');
   // ── data server ──
   const [loading, setLoading] = useState(true);
   const [slug, setSlug] = useState('');
@@ -101,13 +108,16 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    const detailUrl = dashboardId ? `/api/me/dashboards/${dashboardId}` : '/api/me/share';
     Promise.all([
-      fetch('/api/me/share', { credentials: 'include' }).then((r) => r.json()),
+      fetch(detailUrl, { credentials: 'include' }).then((r) => r.json()),
       fetch('/api/me/share/microsites', { credentials: 'include' }).then((r) => r.json()).catch(() => ({ microsites: [] })),
       fetch('/api/me/profile', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).catch(() => null),
     ]).then(([s, ms, prof]) => {
       if (!alive) return;
-      const share = s?.share || {};
+      // Bentuk data: multi → { dashboard }, tunggal → { share }
+      const share = s?.dashboard || s?.share || {};
+      setName(share.name || dashboardName || 'Dashboard');
       setSlug(share.slug || '');
       setTitle(share.title || '');
       setTagline(share.tagline || '');
@@ -130,7 +140,7 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
       setLoading(false);
     }).catch(() => { if (alive) { setLoading(false); notify('Gagal memuat data dashboard.', 'error'); } });
     return () => { alive = false; };
-  }, [user?.name, user?.orgName, user?.avatarUrl, notify]);
+  }, [user?.name, user?.orgName, user?.avatarUrl, notify, dashboardId, dashboardName]);
 
   /* ── microsite lengkap untuk preview ── */
   const previewMicrosites = useMemo<MicrositeEntity[]>(() => {
@@ -150,9 +160,9 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
   const saveDraft = useCallback(async (silent = true) => {
     setSaving(true);
     try {
-      const r = await fetch('/api/me/share/draft', {
+      const r = await fetch(`${apiBase}/draft`, {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: cfg, slug, title, tagline }),
+        body: JSON.stringify({ config: cfg, slug, title, tagline, name }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'gagal');
@@ -163,7 +173,7 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
       const msg = e instanceof Error ? e.message : 'Gagal menyimpan draft.';
       if (!silent) notify(msg, 'error');
     } finally { setSaving(false); }
-  }, [cfg, slug, title, tagline, notify]);
+  }, [cfg, slug, title, tagline, name, notify, apiBase]);
 
   useEffect(() => {
     if (loading || !dirty) return;
@@ -179,53 +189,55 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
     }
     setPublishing(true);
     try {
-      const r = await fetch('/api/me/share/publish', {
+      const r = await fetch(`${apiBase}/publish`, {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: cfg, slug: slug.trim().toLowerCase(), title, tagline }),
+        body: JSON.stringify({ config: cfg, slug: slug.trim().toLowerCase(), title, tagline, name }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'gagal');
+      const res = d.dashboard || d.share || {};
       setEnabled(true); setHasDraft(false); setDirty(false);
-      setPublishedConfig(normalizeShareConfig(d.share.config));
-      setHistory(Array.isArray(d.share.history) ? d.share.history : []);
+      setPublishedConfig(normalizeShareConfig(res.config));
+      setHistory(Array.isArray(res.history) ? res.history : []);
       notify('Dashboard berhasil diterbitkan! 🎉', 'success');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Gagal menerbitkan.';
       notify(msg, 'error');
     } finally { setPublishing(false); }
-  }, [cfg, slug, title, tagline, notify]);
+  }, [cfg, slug, title, tagline, name, notify, apiBase]);
 
   const unpublish = useCallback(async () => {
     try {
-      const r = await fetch('/api/me/share/unpublish', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const r = await fetch(`${apiBase}/unpublish`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       if (!r.ok) throw new Error('gagal');
       setEnabled(false); notify('Dashboard dinonaktifkan.', 'success');
     } catch { notify('Gagal menonaktifkan.', 'error'); }
-  }, [notify]);
+  }, [notify, apiBase]);
 
   const discardDraft = useCallback(async () => {
     try {
-      await fetch('/api/me/share/discard-draft', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      await fetch(`${apiBase}/discard-draft`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       setCfg(publishedConfig ? clone(publishedConfig) : normalizeShareConfig(null));
       setHasDraft(false); setDirty(false); notify('Draft dibuang, kembali ke versi terbit.', 'success');
     } catch { notify('Gagal membuang draft.', 'error'); }
-  }, [publishedConfig, notify]);
+  }, [publishedConfig, notify, apiBase]);
 
   const restore = useCallback(async (index: number) => {
     try {
-      const r = await fetch('/api/me/share/restore', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index }) });
+      const r = await fetch(`${apiBase}/restore`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || 'gagal');
-      setCfg(normalizeShareConfig(d.share.config));
-      setPublishedConfig(normalizeShareConfig(d.share.config));
-      setHistory(Array.isArray(d.share.history) ? d.share.history : []);
+      const res = d.dashboard || d.share || {};
+      setCfg(normalizeShareConfig(res.config));
+      setPublishedConfig(normalizeShareConfig(res.config));
+      setHistory(Array.isArray(res.history) ? res.history : []);
       setShowHistory(false); setDirty(false);
       notify('Versi dipulihkan.', 'success');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Gagal memulihkan.';
       notify(msg, 'error');
     }
-  }, [notify]);
+  }, [notify, apiBase]);
 
   const applyTheme = useCallback((id: string) => {
     const t = getTheme(id);
@@ -292,7 +304,7 @@ export default function ShareEditor({ onExit, user, onNotify }: ShareEditorProps
           <button onClick={onExit} className="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 hover:bg-slate-50" title="Keluar editor"><X className="h-4 w-4" /></button>
           <div className="leading-tight">
             <div className="flex items-center gap-2 font-display text-sm font-extrabold">
-              Editor Dashboard Publik
+              <span className="max-w-[40vw] truncate" title={name}>{name || 'Editor Dashboard Publik'}</span>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{effTheme.name}</span>
             </div>
             <div className="text-[11px] text-slate-400">{saving ? 'Menyimpan…' : dirty ? 'Perubahan belum disimpan' : savedAt ? 'Draft tersimpan' : 'Siap'}</div>

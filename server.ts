@@ -890,12 +890,342 @@ function shareSettings(u: store.DbUser) {
   };
 }
 
+/* ── MULTI DASHBOARD PENGELOLA ────────────────────────────────────────────
+ * Satu pengelola boleh punya banyak dashboard publik. Dashboard lama (kolom
+ * share_* di users) di-backfill ke tabel dashboards saat init. Endpoint:
+ *   GET    /api/me/dashboards                 daftar dashboard
+ *   POST   /api/me/dashboards                 buat dashboard baru
+ *   GET    /api/me/dashboards/:id             detail (untuk editor)
+ *   PATCH  /api/me/dashboards/:id             ubah pengaturan (nama/slug/title/tagline/category)
+ *   POST   /api/me/dashboards/:id/draft       simpan draft
+ *   POST   /api/me/dashboards/:id/publish     terbitkan
+ *   POST   /api/me/dashboards/:id/unpublish   nonaktifkan
+ *   POST   /api/me/dashboards/:id/discard-draft
+ *   POST   /api/me/dashboards/:id/restore     pulihkan dari riwayat
+ *   POST   /api/me/dashboards/:id/duplicate   duplikasi
+ *   DELETE /api/me/dashboards/:id             hapus
+ * SEMUA endpoint wajib sesi + kepemilikan (getDashboardOwned) — isolasi di backend.
+ */
+const DASHBOARD_SLUG_RE = /^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/;
+
+function dashboardSummary(d: store.DbDashboard) {
+  let theme = '';
+  try {
+    const c = parseShareConfig(d.config) as any;
+    const dr = d.draft ? (parseShareConfig(d.draft) as any) : null;
+    theme = c?.template || dr?.template || '';
+  } catch { theme = ''; }
+  return {
+    id: d.id,
+    name: d.name || 'Dashboard',
+    slug: d.slug || '',
+    title: d.title || '',
+    tagline: d.tagline || '',
+    category: d.category || '',
+    enabled: !!d.enabled && !!d.slug,
+    hasDraft: !!d.draft,
+    url: d.slug && d.enabled ? `/share/${d.slug}` : '',
+    thumb: d.thumb || '',
+    theme,
+    updatedAt: d.updated_at,
+    createdAt: d.created_at,
+  };
+}
+
+function dashboardDetail(d: store.DbDashboard) {
+  return {
+    ...dashboardSummary(d),
+    config: parseShareConfig(d.config),
+    draft: d.draft ? parseShareConfig(d.draft) : null,
+    history: parseShareHistory(d.history).map((h: any) => ({ at: h.at, label: h.label || '' })),
+  };
+}
+
+// Pastikan pengguna punya minimal satu dashboard (lazy: migrasi dari kolom lama bila kosong).
+function ensurePrimaryDashboard(u: store.DbUser): store.DbDashboard {
+  const existing = store.listDashboardsByOwner(u.id);
+  if (existing.length > 0) return existing[0];
+  const legacySaysSomething = !!(u.share_slug || u.share_config || u.share_enabled);
+  return store.createDashboard({
+    ownerId: u.id,
+    name: u.share_title || u.org_name || u.name || 'Dashboard Publik',
+    slug: legacySaysSomething ? (u.share_slug || null) : null,
+    title: u.share_title || null,
+    tagline: u.share_tagline || null,
+    enabled: u.share_enabled ? 1 : 0,
+    config: u.share_config || null,
+    draft: u.share_draft || null,
+    history: u.share_history || null,
+  });
+}
+
+// Ambil dashboard milik user; kirim respons error bila tidak ada/bukan miliknya.
+function requireDashboard(req: express.Request, res: express.Response, u: store.DbUser): store.DbDashboard | null {
+  const d = store.getDashboardOwned(req.params.id, u.id);
+  if (!d) { res.status(404).json({ error: 'Dashboard tidak ditemukan atau bukan milik Anda.' }); return null; }
+  return d;
+}
+
+// Daftar dashboard milik pengguna yang sedang login.
+app.get('/api/me/dashboards', (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    ensurePrimaryDashboard(u); // jamin minimal satu
+    const list = store.listDashboardsByOwner(u.id).map(dashboardSummary);
+    return res.json({ success: true, dashboards: list });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal memuat daftar dashboard.' });
+  }
+});
+
+// Buat dashboard baru (kosong, dari tema, atau duplikasi — duplikasi punya endpoint sendiri).
+app.post('/api/me/dashboards', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim().slice(0, 120) || 'Dashboard Baru';
+    let slug = b.slug !== undefined ? String(b.slug).trim().toLowerCase() : '';
+    if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
+      return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
+    }
+    if (slug && store.isDashboardSlugTaken(slug, undefined, u.id)) {
+      return res.status(409).json({ error: 'Slug itu sudah dipakai. Pilih yang lain.' });
+    }
+    const config = b.config !== undefined ? JSON.stringify(sanitizeShareConfig(b.config)) : null;
+    const d = store.createDashboard({
+      ownerId: u.id,
+      name,
+      slug: slug || null,
+      title: String(b.title || name).slice(0, 120) || null,
+      tagline: b.tagline !== undefined ? (String(b.tagline).slice(0, 300) || null) : null,
+      category: b.category !== undefined ? (String(b.category).slice(0, 60) || null) : null,
+      enabled: 0, // dashboard baru selalu Draft
+      config, draft: config, history: null, thumb: null,
+    });
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'create_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, dashboard: dashboardDetail(d) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal membuat dashboard.' });
+  }
+});
+
+// Detail satu dashboard (dipakai editor).
+app.get('/api/me/dashboards/:id', (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  return res.json({ success: true, dashboard: dashboardDetail(d) });
+});
+
+// Ubah pengaturan dasar dashboard (nama/slug/title/tagline/category).
+app.patch('/api/me/dashboards/:id', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  try {
+    const b = req.body || {};
+    const patch: any = {};
+    if (b.name !== undefined) patch.name = String(b.name).slice(0, 120) || d.name;
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.category !== undefined) patch.category = String(b.category).slice(0, 60) || null;
+    if (b.slug !== undefined) {
+      const slug = String(b.slug).trim().toLowerCase();
+      if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
+        return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
+      }
+      if (slug && store.isDashboardSlugTaken(slug, d.id, u.id)) {
+        return res.status(409).json({ error: 'Slug itu sudah dipakai. Pilih yang lain.' });
+      }
+      patch.slug = slug || null;
+    }
+    if (b.enabled !== undefined) {
+      const willEnable = b.enabled ? 1 : 0;
+      if (willEnable && !(patch.slug ?? d.slug)) {
+        return res.status(400).json({ error: 'Isi slug dulu sebelum mengaktifkan.' });
+      }
+      patch.enabled = willEnable;
+    }
+    const updated = store.updateDashboard(d.id, patch);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'update_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, dashboard: dashboardDetail(updated!) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menyimpan pengaturan dashboard.' });
+  }
+});
+
+// Simpan draft dashboard.
+app.post('/api/me/dashboards/:id/draft', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  try {
+    const b = req.body || {};
+    const clean = sanitizeShareConfig(b.config || b);
+    const patch: any = { draft: JSON.stringify(clean) };
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.name !== undefined) patch.name = String(b.name).slice(0, 120) || d.name;
+    if (b.slug !== undefined) {
+      const slug = String(b.slug).trim().toLowerCase();
+      if (slug && !DASHBOARD_SLUG_RE.test(slug)) {
+        return res.status(400).json({ error: 'Slug tidak valid (3–60, huruf kecil/angka/tanda hubung).' });
+      }
+      if (slug && store.isDashboardSlugTaken(slug, d.id, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+      patch.slug = slug || null;
+    }
+    const updated = store.updateDashboard(d.id, patch);
+    return res.json({ success: true, dashboard: dashboardDetail(updated!), savedAt: updated!.updated_at });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menyimpan draft.' });
+  }
+});
+
+// Terbitkan dashboard (draft → config, riwayat dicatat, enabled=1).
+app.post('/api/me/dashboards/:id/publish', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  try {
+    const b = req.body || {};
+    const next = sanitizeShareConfig(b.config || (d.draft ? JSON.parse(d.draft) : d.config ? JSON.parse(d.config) : {}));
+    const slug = (b.slug !== undefined ? String(b.slug).trim().toLowerCase() : (d.slug || '')).trim();
+    if (slug && !DASHBOARD_SLUG_RE.test(slug)) return res.status(400).json({ error: 'Slug tidak valid (3–60).' });
+    if (!slug) return res.status(400).json({ error: 'Isi slug dashboard dulu sebelum menerbitkan.' });
+    if (store.isDashboardSlugTaken(slug, d.id, u.id)) return res.status(409).json({ error: 'Slug sudah dipakai.' });
+
+    const prev = d.config ? { at: new Date().toISOString(), label: 'Sebelum terbit', config: parseShareConfig(d.config) } : null;
+    const history = parseShareHistory(d.history);
+    const nextHistory = ([...(prev ? [prev] : []), ...history]).slice(0, 20);
+
+    const patch: any = {
+      config: JSON.stringify(next), slug, enabled: 1, draft: null,
+      history: JSON.stringify(nextHistory),
+    };
+    if (b.tagline !== undefined) patch.tagline = String(b.tagline).slice(0, 300) || null;
+    if (b.title !== undefined) patch.title = String(b.title).slice(0, 120) || null;
+    if (b.name !== undefined) patch.name = String(b.name).slice(0, 120) || d.name;
+    const updated = store.updateDashboard(d.id, patch);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'publish_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, dashboard: dashboardDetail(updated!) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menerbitkan dashboard.' });
+  }
+});
+
+// Nonaktifkan dashboard.
+app.post('/api/me/dashboards/:id/unpublish', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  const updated = store.updateDashboard(d.id, { enabled: 0 });
+  store.audit({ actorId: u.id, actorEmail: u.email, action: 'unpublish_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+  return res.json({ success: true, dashboard: dashboardDetail(updated!) });
+});
+
+// Buang draft.
+app.post('/api/me/dashboards/:id/discard-draft', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  const updated = store.updateDashboard(d.id, { draft: null });
+  return res.json({ success: true, dashboard: dashboardDetail(updated!) });
+});
+
+// Pulihkan dari riwayat.
+app.post('/api/me/dashboards/:id/restore', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  try {
+    const idx = Number(req.body?.index);
+    const history = parseShareHistory(d.history);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= history.length) {
+      return res.status(400).json({ error: 'Riwayat tidak ditemukan.' });
+    }
+    const restored = sanitizeShareConfig(history[idx].config);
+    const updated = store.updateDashboard(d.id, { config: JSON.stringify(restored), draft: null });
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'restore_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true, dashboard: dashboardDetail(updated!) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal memulihkan versi.' });
+  }
+});
+
+// Duplikasi dashboard → entitas baru (status Draft, slug harus unik).
+app.post('/api/me/dashboards/:id/duplicate', express.json(), (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const src = requireDashboard(req, res, u);
+  if (!src) return;
+  try {
+    const b = req.body || {};
+    let name = String(b.name || '').trim().slice(0, 120) || `${src.name} (Salinan)`;
+    let slug = b.slug !== undefined ? String(b.slug).trim().toLowerCase() : '';
+    if (slug && !DASHBOARD_SLUG_RE.test(slug)) return res.status(400).json({ error: 'Slug tidak valid (3–60).' });
+    if (slug && store.isDashboardSlugTaken(slug, undefined, u.id)) return res.status(409).json({ error: 'Slug itu sudah dipakai. Pilih yang lain.' });
+    const d = store.createDashboard({
+      ownerId: u.id,
+      name,
+      slug: slug || null,
+      title: src.title, tagline: src.tagline, category: src.category,
+      enabled: 0, // salinan selalu Draft
+      config: src.config, draft: src.config, history: null, thumb: src.thumb,
+    });
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'duplicate_dashboard', targetType: 'dashboard', targetId: d.id, detail: `from:${src.id}`, ip: clientIp(req) });
+    return res.json({ success: true, dashboard: dashboardDetail(d) });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menduplikasi dashboard.' });
+  }
+});
+
+// Hapus dashboard.
+app.delete('/api/me/dashboards/:id', (req, res) => {
+  const u = requireUser(req, res);
+  if (!u) return;
+  const d = requireDashboard(req, res, u);
+  if (!d) return;
+  try {
+    store.deleteDashboard(d.id);
+    store.audit({ actorId: u.id, actorEmail: u.email, action: 'delete_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+    return res.json({ success: true });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Gagal menghapus dashboard.' });
+  }
+});
+
 // Halaman publik /share/<slug> — profil pengelola + microsite published-nya.
+// Resolusi: tabel dashboards (multi) dulu; bila tak ada, fallback ke dashboard
+// lama (users.share_slug) agar URL yang sudah berjalan tetap bekerja.
 app.get('/api/public/share/:slug', (req, res) => {
   try {
-    const owner = store.findUserByShareSlug(req.params.slug);
-    if (!owner) return res.status(404).json({ error: 'Dashboard tidak ditemukan.' });
-    const config = parseShareConfig(owner.share_config);
+    const dash = store.findDashboardBySlug(req.params.slug);
+    let owner: store.DbUser | undefined;
+    let config: any;
+    let title = '';
+    let tagline = '';
+    if (dash) {
+      owner = store.findUserById(dash.owner_id);
+      if (!owner) return res.status(404).json({ error: 'Dashboard tidak ditemukan.' });
+      config = parseShareConfig(dash.config);
+      title = dash.title || dash.name || '';
+      tagline = dash.tagline || '';
+    } else {
+      owner = store.findUserByShareSlug(req.params.slug);
+      if (!owner) return res.status(404).json({ error: 'Dashboard tidak ditemukan.' });
+      config = parseShareConfig(owner.share_config);
+      title = owner.share_title || '';
+      tagline = owner.share_tagline || '';
+    }
     let microsites = store.listPublishedMicrositesByOwner(owner.id).map((m: any) => {
       const { password, ...safe } = m;
       return safe;
@@ -918,9 +1248,9 @@ app.get('/api/public/share/:slug', (req, res) => {
         phone: owner.phone,
       },
       share: {
-        slug: owner.share_slug,
-        title: owner.share_title || '',
-        tagline: owner.share_tagline || '',
+        slug: req.params.slug,
+        title,
+        tagline,
         config,
       },
       microsites,
@@ -1030,6 +1360,32 @@ app.get('/api/admin/users', (req, res) => {
     ...publicUser(u), micrositeCount: store.ownerStats(u.id).total,
   }));
   return res.json({ success: true, users });
+});
+
+// Daftar SEMUA dashboard publik (lintas pengelola) — untuk administrasi/moderasi.
+app.get('/api/admin/dashboards', (req, res) => {
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+  const dashboards = store.listAllDashboards().map((d) => ({
+    id: d.id, name: d.name, slug: d.slug || '', title: d.title || '', category: d.category || '',
+    enabled: !!d.enabled, published: !!d.enabled && !!d.slug,
+    ownerId: d.owner_id, ownerEmail: (d as any).owner_email, ownerName: (d as any).owner_name,
+    url: d.slug && d.enabled ? `/share/${d.slug}` : '',
+    updatedAt: d.updated_at, createdAt: d.created_at,
+  }));
+  return res.json({ success: true, dashboards });
+});
+
+// Nonaktifkan/aktifkan dashboard pengelola (moderasi admin).
+app.post('/api/admin/dashboards/:id/disable', express.json(), (req, res) => {
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+  const d = store.getDashboardById(req.params.id);
+  if (!d) return res.status(404).json({ error: 'Dashboard tidak ditemukan.' });
+  const enable = !!(req.body && req.body.enable);
+  store.updateDashboard(d.id, { enabled: enable ? 1 : 0 });
+  store.audit({ actorId: admin.id, actorEmail: admin.email, action: enable ? 'admin_enable_dashboard' : 'admin_disable_dashboard', targetType: 'dashboard', targetId: d.id, ip: clientIp(req) });
+  return res.json({ success: true });
 });
 
 // Tambah pengelola.

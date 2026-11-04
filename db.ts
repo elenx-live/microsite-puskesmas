@@ -90,6 +90,30 @@ export function initDb(dbPath?: string): Database.Database {
       value      TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    -- Dashboard publik (MULTI per pengelola). Satu entitas mandiri: slug, tema,
+    -- config, draft, riwayat, status publikasi. Kolom share_* di users tetap
+    -- dipertahankan sebagai kompatibilitas dashboard lama (lihat backfill di bawah).
+    CREATE TABLE IF NOT EXISTS dashboards (
+      id           TEXT PRIMARY KEY,
+      owner_id     TEXT NOT NULL,
+      name         TEXT NOT NULL DEFAULT '',
+      slug         TEXT,
+      title        TEXT,
+      tagline      TEXT,
+      category     TEXT,
+      enabled      INTEGER NOT NULL DEFAULT 0,     -- dipublikasikan / bisa diakses publik
+      config       TEXT,                           -- JSON ShareConfig (versi terbit)
+      draft        TEXT,                           -- JSON ShareConfig (mode editing)
+      history      TEXT,                           -- JSON array riwayat (maks 20)
+      thumb        TEXT,                           -- thumbnail/screenshot (opsional)
+      sort_order   INTEGER NOT NULL DEFAULT 0,
+      created_at   TEXT NOT NULL,
+      updated_at   TEXT NOT NULL,
+      FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_dashboards_owner ON dashboards(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_dashboards_slug  ON dashboards(slug);
   `);
 
   // Migrasi idempoten: kolom dashboard publik (share) per pengelola.
@@ -104,6 +128,42 @@ export function initDb(dbPath?: string): Database.Database {
   if (!userCols.includes('share_draft')) db.exec('ALTER TABLE users ADD COLUMN share_draft TEXT');
   if (!userCols.includes('share_history')) db.exec('ALTER TABLE users ADD COLUMN share_history TEXT');
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_share_slug ON users(share_slug) WHERE share_slug IS NOT NULL AND share_slug <> ''");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_dashboards_slug ON dashboards(slug) WHERE slug IS NOT NULL AND slug <> ''");
+
+  // Backfill transisi: dashboard lama (kolom share_* di users) → tabel dashboards.
+  // Idempoten: hanya untuk pengguna yang belum punya entri dashboards sama sekali.
+  try {
+    const legacyOwners = db.prepare(`
+      SELECT u.* FROM users u
+      WHERE (u.share_slug IS NOT NULL AND u.share_slug <> '')
+         OR (u.share_config IS NOT NULL AND u.share_config <> '')
+         OR (u.share_enabled = 1)
+    `).all() as any[];
+    const hasAny = db.prepare('SELECT COUNT(*) AS n FROM dashboards WHERE owner_id = ?');
+    const insDash = db.prepare(`
+      INSERT INTO dashboards (id, owner_id, name, slug, title, tagline, category, enabled, config, draft, history, thumb, sort_order, created_at, updated_at)
+      VALUES (@id, @owner_id, @name, @slug, @title, @tagline, NULL, @enabled, @config, @draft, @history, NULL, 0, @created_at, @updated_at)
+    `);
+    for (const u of legacyOwners) {
+      if ((hasAny.get(u.id) as any).n > 0) continue; // sudah punya dashboard — lewati
+      insDash.run({
+        id: uid('dsh'),
+        owner_id: u.id,
+        name: u.share_title || (u.org_name || u.name || 'Dashboard Publik'),
+        slug: u.share_slug || null,
+        title: u.share_title || null,
+        tagline: u.share_tagline || null,
+        enabled: u.share_enabled ? 1 : 0,
+        config: u.share_config || null,
+        draft: u.share_draft || null,
+        history: u.share_history || null,
+        created_at: u.created_at || nowIso(),
+        updated_at: u.updated_at || nowIso(),
+      });
+    }
+  } catch (e) {
+    console.error('[db] backfill dashboards gagal:', (e as Error).message);
+  }
 
   return db;
 }
@@ -287,6 +347,90 @@ export function isShareSlugTaken(slug: string, excludeId?: string): boolean {
   if (!clean) return false;
   const row = getDb().prepare('SELECT id FROM users WHERE share_slug = ?').get(clean) as { id: string } | undefined;
   return !!row && row.id !== excludeId;
+}
+
+// ── Dashboards publik (MULTI per pengelola) ─────────────────────────────────
+export interface DbDashboard {
+  id: string; owner_id: string; name: string; slug: string | null;
+  title: string | null; tagline: string | null; category: string | null;
+  enabled: number; config: string | null; draft: string | null; history: string | null;
+  thumb: string | null; sort_order: number; created_at: string; updated_at: string;
+}
+
+export function listDashboardsByOwner(ownerId: string): DbDashboard[] {
+  return getDb().prepare('SELECT * FROM dashboards WHERE owner_id = ? ORDER BY sort_order ASC, created_at ASC').all(ownerId) as DbDashboard[];
+}
+export function countDashboardsByOwner(ownerId: string): number {
+  return (getDb().prepare('SELECT COUNT(*) AS n FROM dashboards WHERE owner_id = ?').get(ownerId) as any).n as number;
+}
+export function getDashboardById(id: string): DbDashboard | undefined {
+  return getDb().prepare('SELECT * FROM dashboards WHERE id = ?').get(id) as DbDashboard | undefined;
+}
+/** Ambil dashboard milik owner tertentu (isolasi kepemilikan di lapisan data). */
+export function getDashboardOwned(id: string, ownerId: string): DbDashboard | undefined {
+  return getDb().prepare('SELECT * FROM dashboards WHERE id = ? AND owner_id = ?').get(id, ownerId) as DbDashboard | undefined;
+}
+/** Cari dashboard publik (published) berdasarkan slug. */
+export function findDashboardBySlug(slug: string): DbDashboard | undefined {
+  const clean = String(slug || '').trim().toLowerCase();
+  if (!clean) return undefined;
+  return getDb().prepare('SELECT * FROM dashboards WHERE slug = ? AND enabled = 1 LIMIT 1').get(clean) as DbDashboard | undefined;
+}
+/** Cek bentrok slug lintas tabel dashboards DAN users.share_slug (dashboard lama). */
+export function isDashboardSlugTaken(slug: string, excludeDashId?: string, excludeUserId?: string): boolean {
+  const clean = String(slug || '').trim().toLowerCase();
+  if (!clean) return false;
+  const d = getDb().prepare('SELECT id FROM dashboards WHERE slug = ?').get(clean) as { id: string } | undefined;
+  if (d && d.id !== excludeDashId) return true;
+  const u = getDb().prepare('SELECT id FROM users WHERE share_slug = ?').get(clean) as { id: string } | undefined;
+  if (u && u.id !== excludeUserId) return true;
+  return false;
+}
+export function listAllDashboards(): (DbDashboard & { owner_email: string; owner_name: string })[] {
+  return getDb().prepare(`
+    SELECT d.*, u.email AS owner_email, u.name AS owner_name
+    FROM dashboards d JOIN users u ON u.id = d.owner_id
+    ORDER BY d.updated_at DESC
+  `).all() as any[];
+}
+
+export function createDashboard(input: {
+  ownerId: string; name: string; slug?: string | null; title?: string | null; tagline?: string | null;
+  category?: string | null; enabled?: number; config?: string | null; draft?: string | null;
+  history?: string | null; thumb?: string | null;
+}): DbDashboard {
+  const id = uid('dsh');
+  const t = nowIso();
+  const ord = (getDb().prepare('SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM dashboards WHERE owner_id = ?').get(input.ownerId) as any).n as number;
+  getDb().prepare(`
+    INSERT INTO dashboards (id, owner_id, name, slug, title, tagline, category, enabled, config, draft, history, thumb, sort_order, created_at, updated_at)
+    VALUES (@id, @owner_id, @name, @slug, @title, @tagline, @category, @enabled, @config, @draft, @history, @thumb, @sort_order, @created_at, @updated_at)
+  `).run({
+    id, owner_id: input.ownerId, name: input.name || 'Dashboard Baru',
+    slug: input.slug ? String(input.slug).toLowerCase() : null,
+    title: input.title ?? null, tagline: input.tagline ?? null, category: input.category ?? null,
+    enabled: input.enabled ? 1 : 0, config: input.config ?? null, draft: input.draft ?? null,
+    history: input.history ?? null, thumb: input.thumb ?? null, sort_order: ord,
+    created_at: t, updated_at: t,
+  });
+  return getDashboardById(id)!;
+}
+
+export function updateDashboard(id: string, patch: Partial<DbDashboard>): DbDashboard | undefined {
+  const cur = getDashboardById(id);
+  if (!cur) return undefined;
+  const fields: string[] = [];
+  const params: any = { id, updated_at: nowIso() };
+  const allowed = ['name', 'slug', 'title', 'tagline', 'category', 'enabled', 'config', 'draft', 'history', 'thumb', 'sort_order'] as const;
+  for (const k of allowed) {
+    if ((patch as any)[k] !== undefined) { fields.push(`${k} = @${k}`); params[k] = (patch as any)[k]; }
+  }
+  if (!fields.length) return cur;
+  getDb().prepare(`UPDATE dashboards SET ${fields.join(', ')}, updated_at = @updated_at WHERE id = @id`).run(params);
+  return getDashboardById(id);
+}
+export function deleteDashboard(id: string): void {
+  getDb().prepare('DELETE FROM dashboards WHERE id = ?').run(id);
 }
 export function listAllMicrosites(): any[] {
   return (getDb().prepare('SELECT * FROM microsites ORDER BY updated_at DESC').all() as DbMicrosite[])

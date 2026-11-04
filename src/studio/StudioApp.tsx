@@ -603,6 +603,7 @@ function ToggleRow({ checked, onChange, title, desc }: { checked: boolean; onCha
 
 function ShareTab() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState('');
@@ -613,6 +614,13 @@ function ShareTab() {
   const [saved, setSaved] = useState({ enabled: false, url: '' });
   const [copied, setCopied] = useState(false);
   const [published, setPublished] = useState<{ id: string; slug: string; name: string; category: string }[]>([]);
+
+  // Akses langsung: /studio/share?edit=1 → buka editor visual.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('edit') === '1') {
+      navigate('/studio/share/editor', { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     Promise.all([
@@ -713,6 +721,40 @@ function ShareTab() {
         </p>
       </div>
 
+      {/* ── Editor Visual (utama) ────────────────────────────────────── */}
+      <div className="studio-card max-w-3xl space-y-4 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="font-display text-sm font-bold">Editor Visual</h2>
+            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+              Pilih tema, atur semua elemen, dan lihat preview langsung — tanpa mengubah kode.
+            </p>
+          </div>
+          <Badge variant={enabled ? 'emerald' : 'slate'} size="sm">
+            {enabled ? 'Aktif' : 'Belum diaktifkan'}
+          </Badge>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => navigate('/studio/share/editor')}>
+            <Palette className="h-4 w-4" /> Buka Editor Visual
+          </Button>
+          {enabled && saved.url && (
+            <a
+              href={saved.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-[var(--button-radius)] border border-[var(--color-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition-all hover:bg-[var(--color-muted)]"
+            >
+              <ExternalLink className="h-4 w-4" /> Lihat Dashboard
+            </a>
+          )}
+        </div>
+        <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-muted)] px-3 py-2">
+          <span className="block text-xs text-[var(--color-muted-foreground)]">Link Anda</span>
+          <span className="block break-all font-mono text-sm">{window.location.origin}/share/{slug || '…'}</span>
+        </div>
+      </div>
+
       {/* ── Pengaturan dasar ─────────────────────────────────────────── */}
       <div className="studio-card max-w-3xl space-y-4 p-6">
         <h2 className="font-display text-sm font-bold">Pengaturan Dasar</h2>
@@ -735,7 +777,10 @@ function ShareTab() {
 
       {/* ── Kustomisasi tampilan ─────────────────────────────────────── */}
       <div className="studio-card max-w-3xl space-y-5 p-6">
-        <h2 className="font-display text-sm font-bold">Kustomisasi Tampilan</h2>
+        <h2 className="font-display text-sm font-bold">Kustomisasi Cepat</h2>
+        <p className="text-xs text-[var(--color-muted-foreground)]">
+          Pengaturan ringkas. Untuk kustomisasi menyeluruh (tema, latar, tipografi, warna, layout, kartu, section) gunakan Editor Visual.
+        </p>
 
         <div>
           <span className="mb-2 block text-xs font-semibold text-[var(--color-muted-foreground)]">Warna aksen</span>

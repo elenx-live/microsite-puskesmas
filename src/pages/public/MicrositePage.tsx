@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/PublicAuthContext';
 import { micrositeService } from '../../services/micrositeService';
 import { MicrositeEntity, HomepageTemplateType, BackgroundAnimationType } from '../../types';
@@ -22,6 +22,7 @@ import {
 export default function MicrositePage() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const params = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const isPreviewMode = searchParams.get('preview') === 'true' || Boolean(user);
@@ -250,13 +251,14 @@ export default function MicrositePage() {
             <Globe className="h-4 w-4 text-[var(--color-primary)]" />
             Lihat Microsite Lain
           </Link>
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
           >
             <ArrowLeft className="h-4 w-4" />
-            Kembali ke Beranda
-          </Link>
+            Kembali
+          </button>
         </div>
       </div>
     );
@@ -282,13 +284,14 @@ export default function MicrositePage() {
             <Globe className="h-4 w-4 text-[var(--color-primary)]" />
             Jelajahi Microsite
           </Link>
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
           >
             <ArrowLeft className="h-4 w-4" />
-            Kembali ke Beranda
-          </Link>
+            Kembali
+          </button>
         </div>
       </div>
     );
@@ -352,13 +355,14 @@ export default function MicrositePage() {
           </form>
 
           <div className="pt-2 text-center">
-            <Link
-              to="/"
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
               className="inline-flex items-center justify-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-text)]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Kembali ke Beranda</span>
-            </Link>
+              <span>Kembali</span>
+            </button>
           </div>
         </div>
       </div>

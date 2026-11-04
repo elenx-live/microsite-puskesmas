@@ -28,7 +28,7 @@ import { ArtisticBackgroundCanvas } from '../../artistic/ArtisticBackgroundCanva
 import { MicrositeContentList } from '../MicrositeContentList';
 import { MicrositeHeaderRenderer } from '../MicrositeHeaderRenderer';
 import { MicrositeFooterRenderer } from '../MicrositeFooterRenderer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   microsite: MicrositeEntity;
@@ -47,6 +47,7 @@ export const HarmoniNusantaraMicrosite: React.FC<Props> = ({
   copied,
   activeAnimation = 'golden_radiance'
 }) => {
+  const navigate = useNavigate();
   const bgImg = microsite.backgroundImageUrl || microsite.themeCustomization?.bgImageUrl;
   const bgOpacity = (microsite.themeCustomization?.bgImageOpacity ?? 25) / 100;
   const bgBlur =
@@ -82,13 +83,14 @@ export const HarmoniNusantaraMicrosite: React.FC<Props> = ({
 
       {/* Top Header */}
       <div className="relative z-10 w-full max-w-lg flex justify-between items-center px-2 mb-6">
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[var(--color-card)]/80 hover:bg-[var(--color-card)] border border-amber-500/30 text-xs font-semibold text-amber-200 backdrop-blur-md transition shadow-md"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Beranda Utama</span>
-        </Link>
+          <span>Kembali</span>
+        </button>
 
         <div className="flex items-center gap-2">
           <a

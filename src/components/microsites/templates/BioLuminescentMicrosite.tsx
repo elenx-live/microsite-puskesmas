@@ -28,7 +28,7 @@ import { ArtisticBackgroundCanvas } from '../../artistic/ArtisticBackgroundCanva
 import { MicrositeContentList } from '../MicrositeContentList';
 import { MicrositeHeaderRenderer } from '../MicrositeHeaderRenderer';
 import { MicrositeFooterRenderer } from '../MicrositeFooterRenderer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   microsite: MicrositeEntity;
@@ -47,6 +47,7 @@ export const BioLuminescentMicrosite: React.FC<Props> = ({
   copied,
   activeAnimation = 'bioluminescent'
 }) => {
+  const navigate = useNavigate();
   const bgImg = microsite.backgroundImageUrl || microsite.themeCustomization?.bgImageUrl;
   const bgOpacity = (microsite.themeCustomization?.bgImageOpacity ?? 25) / 100;
   const bgBlur =
@@ -83,13 +84,14 @@ export const BioLuminescentMicrosite: React.FC<Props> = ({
 
       {/* Top Header */}
       <div className="relative z-10 w-full max-w-lg flex justify-between items-center px-2 mb-6">
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-[var(--color-card)]/70 hover:bg-[var(--color-card)] border border-teal-500/30 text-xs font-semibold text-teal-300 backdrop-blur-md transition shadow-lg shadow-teal-950/20"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Beranda</span>
-        </Link>
+          <span>Kembali</span>
+        </button>
 
         <div className="flex items-center gap-2">
           <a

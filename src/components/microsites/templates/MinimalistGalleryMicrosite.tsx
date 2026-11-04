@@ -25,7 +25,7 @@ import { ArtisticBackgroundCanvas } from '../../artistic/ArtisticBackgroundCanva
 import { MicrositeContentList } from '../MicrositeContentList';
 import { MicrositeHeaderRenderer } from '../MicrositeHeaderRenderer';
 import { MicrositeFooterRenderer } from '../MicrositeFooterRenderer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   microsite: MicrositeEntity;
@@ -44,6 +44,7 @@ export const MinimalistGalleryMicrosite: React.FC<Props> = ({
   copied,
   activeAnimation = 'subtle_glow'
 }) => {
+  const navigate = useNavigate();
   const bgImg = microsite.backgroundImageUrl || microsite.themeCustomization?.bgImageUrl;
   const bgOpacity = (microsite.themeCustomization?.bgImageOpacity ?? 20) / 100;
   const bgBlur =
@@ -76,13 +77,14 @@ export const MinimalistGalleryMicrosite: React.FC<Props> = ({
 
       {/* Top Gallery Navigation */}
       <div className="relative z-10 w-full max-w-lg flex justify-between items-center px-1 mb-8">
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>INDEX</span>
-        </Link>
+          <span>Kembali</span>
+        </button>
 
         <div className="flex items-center gap-3">
           <button

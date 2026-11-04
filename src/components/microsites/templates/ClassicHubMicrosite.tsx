@@ -22,7 +22,7 @@ import { ArtisticBackgroundCanvas } from '../../artistic/ArtisticBackgroundCanva
 import { MicrositeContentList } from '../MicrositeContentList';
 import { MicrositeHeaderRenderer } from '../MicrositeHeaderRenderer';
 import { MicrositeFooterRenderer } from '../MicrositeFooterRenderer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { generateSmartShareUrl } from '../../../utils/shareUtils';
 
 interface Props {
@@ -42,6 +42,7 @@ export const ClassicHubMicrosite: React.FC<Props> = ({
   copied,
   activeAnimation = 'none'
 }) => {
+  const navigate = useNavigate();
   const bgImg = microsite.backgroundImageUrl || microsite.themeCustomization?.bgImageUrl;
   const bgOpacity = (microsite.themeCustomization?.bgImageOpacity ?? 20) / 100;
   const bgBlur =
@@ -133,13 +134,14 @@ export const ClassicHubMicrosite: React.FC<Props> = ({
 
       {/* Top Bar */}
       <div className="relative z-10 w-full max-w-lg flex justify-between items-center px-2">
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] transition"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Website Utama</span>
-        </Link>
+          <span>Kembali</span>
+        </button>
 
         <div className="flex items-center gap-2">
           <a

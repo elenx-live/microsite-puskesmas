@@ -212,30 +212,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SHOWCASE ────────────────────────────────────────────── */}
-      {s?.showcaseEnabled !== false && (
-        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <Badge variant="zinc" className="mb-3">Galeri</Badge>
-              <h2 className="font-display text-2xl font-extrabold tracking-tight text-[var(--color-text)] sm:text-3xl">
-                Microsite yang sudah tayang
-              </h2>
-              <p className="mt-2 max-w-xl text-sm text-[var(--color-muted-foreground)]">
-                Contoh nyata microsite yang dibuat pengelola di platform ini.
-              </p>
-            </div>
-            <Link to="/microsites">
-              <Button variant="outline" size="sm">
-                Lihat semua
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          <ShowcaseGrid />
-        </section>
-      )}
-
       {/* ── CTA ─────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
         <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] px-6 py-12 text-center sm:px-12 sm:py-16">
@@ -302,81 +278,6 @@ export default function LandingPage() {
         </div>
       </section>
     </PublicLayout>
-  );
-}
-
-/** Galeri microsite publik yang sudah tayang (fallback bila kosong). */
-function ShowcaseGrid() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/microsites', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => setItems((d.microsites || []).slice(0, 6)))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="studio-card animate-pulse">
-            <div className="h-4 w-2/3 rounded bg-[var(--color-muted)]" />
-            <div className="mt-3 h-3 w-1/2 rounded bg-[var(--color-muted)]" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (!items.length) {
-    return (
-      <p className="mt-8 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] py-10 text-center text-sm text-[var(--color-muted-foreground)]">
-        Belum ada microsite tayang. Jadilah yang pertama!
-      </p>
-    );
-  }
-
-  return (
-    <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((m, i) => (
-        <a
-          key={m.id || m.slug}
-          href={`/m/${m.slug}`}
-          style={{ animationDelay: `${i * 40}ms` }}
-          className="studio-card studio-card-interactive studio-rise group flex flex-col gap-3"
-        >
-          <div className="flex items-center gap-3">
-            {m.ogImageUrl || m.profileImageUrl || m.logoUrl ? (
-              <img
-                src={m.ogImageUrl || m.profileImageUrl || m.logoUrl}
-                alt=""
-                loading="lazy"
-                className="h-10 w-10 rounded-[var(--radius-sm)] border border-[var(--color-border)] object-cover"
-              />
-            ) : (
-              <span className="grid h-10 w-10 place-items-center rounded-[var(--radius-sm)] bg-[var(--color-secondary)] text-[var(--color-primary)]">
-                <Globe className="h-4 w-4" />
-              </span>
-            )}
-            <div className="min-w-0">
-              <h3 className="line-clamp-1 font-display text-sm font-bold text-[var(--color-text)] group-hover:text-[var(--color-primary)]">
-                {m.name}
-              </h3>
-              <p className="truncate text-[11px] text-[var(--color-muted-foreground)]">/m/{m.slug}</p>
-            </div>
-          </div>
-          <p className="line-clamp-2 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
-            {m.description || 'Portal tautan & informasi.'}
-          </p>
-          <span className="mt-auto inline-flex items-center gap-1 text-xs font-bold text-[var(--color-primary)]">
-            Kunjungi <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </span>
-        </a>
-      ))}
-    </div>
   );
 }
 

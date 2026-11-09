@@ -10,7 +10,7 @@ import {
   Search, X, ChevronDown,
 } from 'lucide-react';
 import {
-  Aurora, Grain, Ornament, Reveal, CornerFrame, SectionIndex,
+  Aurora, Grain, Ornament, Reveal, CornerFrame,
   decorOf, useDecor, usePointerGlow, usePrefersReducedMotion, useParallax,
 } from './shareArt';
 
@@ -420,11 +420,10 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
         {decor.aurora && <Aurora intensity={decor.intensity} dark={theme.dark} />}
         {decor.grain && <Grain opacity={decor.grainOpacity} />}
 
-        {sections.map((sec, secIdx) => {
+        {sections.map((sec) => {
           /** header seksi: nomor editorial + reveal */
-          const sectionHead = (title?: string, label?: string) => (
+          const sectionHead = (title?: string) => (
             <Reveal delay={0}>
-              <SectionIndex n={secIdx + 1} label={label} />
               {title ? <SectionTitle>{title}</SectionTitle> : null}
             </Reveal>
           );
@@ -523,7 +522,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!featured.length) return null;
             return (
               <section id="sh-sec-featured" key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, 'Unggulan')}
+                {sectionHead(sec.title)}
                 <CollectionNav active={navTab} onTab={goToTab} query={query} onQuery={setQuery}
                   featuredCount={featured.length} allCount={microsites.length}
                   featured={featured} onPick={onPick} cfg={cfg} />
@@ -535,7 +534,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
           if (sec.type === 'microsites' || sec.type === 'categories') {
             return (
               <section id="sh-sec-all" key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, 'Koleksi')}
+                {sectionHead(sec.title)}
                 <CollectionNav active={navTab} onTab={goToTab} query={query} onQuery={setQuery}
                   featuredCount={featured.length} allCount={microsites.length}
                   featured={featured} onPick={onPick} cfg={cfg} />
@@ -549,7 +548,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!body && !sec.title) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, sec.type === 'about' ? 'Tentang' : 'Catatan')}
+                {sectionHead(sec.title)}
                 <Reveal delay={90}>
                   <CornerFrame className={decor.frame ? '' : 'sh-noframe'}>
                     <p className="max-w-3xl whitespace-pre-line opacity-85 p-4 sm:p-5" style={{ background: decor.frame ? 'color-mix(in srgb, var(--sh-surface) 55%, transparent)' : undefined, borderRadius: 'var(--sh-radius)' }}>{body}</p>
@@ -564,7 +563,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!imgs.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, 'Galeri')}
+                {sectionHead(sec.title)}
                 <div className="share-grid" style={gridStyle()}>
                   {imgs.map((src, i) => (
                     <Reveal key={i} delay={Math.min(i, 8) * (decor.stagger || 0)}>
@@ -580,7 +579,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!socials.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, 'Jejaring')}
+                {sectionHead(sec.title)}
                 <Reveal delay={90}>
                   <div className="flex flex-wrap gap-3">
                     {socials.map((s) => (
@@ -606,7 +605,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!rows.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sectionHead(sec.title, 'Kontak')}
+                {sectionHead(sec.title)}
                 <div className="flex flex-col gap-3">
                   {rows.map((r, i) => (
                     <Reveal key={i} delay={i * (decor.stagger || 0)}>

@@ -59,19 +59,14 @@ export const Aurora: React.FC<AuroraProps> = ({ intensity = 'sedang', dark, vari
   const still = reduced ? 'sh-static' : '';
   return (
     <div className="sh-aurora" data-dark={dark ? '1' : '0'} data-variant={variant} aria-hidden style={{ opacity: op }}>
-      {/* cahaya */}
-      <span className={`sh-aurora__blob sh-aurora__blob--a ${still}`} />
-      <span className={`sh-aurora__blob sh-aurora__blob--b ${still}`} />
-      <span className={`sh-aurora__blob sh-aurora__blob--c ${still}`} />
-
       {/* kontur topografi — garis sepusat yang mengalir pelan */}
       <svg className={`sh-contour ${still}`} viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" fill="none">
-        {Array.from({ length: 18 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <ellipse key={`a${i}`} cx={940} cy={120} rx={130 + i * 54} ry={96 + i * 40}
             stroke="currentColor" strokeWidth={i % 4 === 0 ? 2 : 1}
             opacity={0.55 - i * 0.024} transform={`rotate(${-16 + i * 0.55} 940 120)`} />
         ))}
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <ellipse key={`b${i}`} cx={120} cy={760} rx={90 + i * 58} ry={70 + i * 44}
             stroke="currentColor" strokeWidth={i % 3 === 0 ? 1.6 : 0.8}
             opacity={0.34 - i * 0.026} transform={`rotate(${12 - i * 0.7} 120 760)`} />
@@ -91,14 +86,11 @@ export const Aurora: React.FC<AuroraProps> = ({ intensity = 'sedang', dark, vari
           stroke="url(#shBrushA)" strokeWidth="90" strokeLinecap="round" opacity=".5" />
         <path d="M-60 700 C 260 610, 420 780, 700 680 S 1080 560, 1280 640"
           stroke="url(#shBrushA)" strokeWidth="34" strokeLinecap="round" opacity=".4" />
-        <path d="M-80 160 C 180 60, 420 210, 660 120 S 1080 -10, 1300 90"
-          stroke="url(#shBrushA)" strokeWidth="120" strokeLinecap="round" opacity=".28" />
       </svg>
 
       {/* titik-titik halus bergerak (bintang pelan) */}
       <span className="sh-spark sh-spark--1" />
       <span className="sh-spark sh-spark--2" />
-      <span className="sh-spark sh-spark--3" />
 
       <span className="sh-aurora__veil" />
     </div>

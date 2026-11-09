@@ -296,7 +296,308 @@
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════════
+     LAPISAN ARTISTIK DASHBOARD PUBLIK
+     Semua kelas berawalan sh-* dipakai oleh src/pages/public/shareArt.tsx
+     dan ShareDashboardPage.tsx. Semuanya menghormati prefers-reduced-motion.
+     ══════════════════════════════════════════════════════════════════ */
+
+  .sh-stage { position: relative; isolation: isolate; }
+
+  /* ── Aurora: cahaya lembut mengalir di belakang konten ─────────────── */
+  .sh-aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    /* digambar di atas latar halaman, di bawah konten */
+    border-radius: inherit;
+  }
+  .sh-aurora__blob {
+    position: absolute;
+    display: block;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    filter: blur(58px);
+    mix-blend-mode: multiply;
+    will-change: transform;
+  }
+  .sh-aurora[data-dark='1'] .sh-aurora__blob {
+    mix-blend-mode: screen;
+    filter: blur(66px);
+  }
+  .sh-aurora__blob--a {
+    background: radial-gradient(circle at 50% 50%,
+      color-mix(in srgb, var(--sh-primary) 78%, transparent) 0%,
+      transparent 66%);
+    top: -18vmax; left: -12vmax;
+    animation: shDriftA 34s ease-in-out infinite alternate;
+  }
+  .sh-aurora__blob--b {
+    background: radial-gradient(circle at 50% 50%,
+      color-mix(in srgb, var(--sh-accent) 72%, transparent) 0%,
+      transparent 66%);
+    top: 22vmax; right: -22vmax;
+    animation: shDriftB 42s ease-in-out infinite alternate;
+  }
+  .sh-aurora__blob--c {
+    background: radial-gradient(circle at 50% 50%,
+      color-mix(in srgb, var(--sh-secondary) 52%, transparent) 0%,
+      transparent 64%);
+    bottom: -26vmax; left: 22vmax;
+    animation: shDriftC 51s ease-in-out infinite alternate;
+  }
+  .sh-aurora__veil {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--sh-bg) 0%, transparent) 0%,
+      color-mix(in srgb, var(--sh-bg) 42%, transparent) 62%,
+      color-mix(in srgb, var(--sh-bg) 70%, transparent) 100%);
+  }
+  @keyframes shDriftA {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(9vmax, 7vmax, 0) scale(1.14); }
+  }
+  @keyframes shDriftB {
+    from { transform: translate3d(0, 0, 0) scale(1.08); }
+    to   { transform: translate3d(-11vmax, -6vmax, 0) scale(0.94); }
+  }
+  @keyframes shDriftC {
+    from { transform: translate3d(0, 0, 0) scale(0.96); }
+    to   { transform: translate3d(6vmax, -9vmax, 0) scale(1.12); }
+  }
+
+  /* ── Grain: butir film halus, dibuat murni dari gradien ───────────── */
+  .sh-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      repeating-radial-gradient(circle at 17% 32%, rgba(0,0,0,.85) 0 1px, transparent 1px 3px),
+      repeating-radial-gradient(circle at 73% 68%, rgba(255,255,255,.7) 0 1px, transparent 1px 4px);
+    background-size: 3px 3px, 4px 4px;
+    mix-blend-mode: soft-light;
+  }
+
+  /* ── Ornamen garis ─────────────────────────────────────────────────── */
+  .sh-ornament {
+    color: var(--sh-accent);
+    pointer-events: none;
+    opacity: .55;
+  }
+  .sh-ornament--arc { position: absolute; width: 300px; height: 300px; }
+  .sh-ornament--orbit { position: absolute; width: 420px; height: 420px; opacity: .38; }
+  .sh-ornament--wave { position: absolute; left: 0; right: 0; width: 100%; height: 160px; }
+  .sh-ornament__draw {
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    animation: shDraw 2.6s cubic-bezier(.22,.61,.36,1) .25s forwards;
+  }
+  .sh-ornament__spin {
+    transform-origin: 210px 210px;
+    animation: shSpin 46s linear infinite;
+  }
+  @keyframes shDraw { to { stroke-dashoffset: 0; } }
+  @keyframes shSpin { to { transform: rotate(360deg); } }
+
+  /* ── Reveal saat digulir ──────────────────────────────────────────── */
+  .sh-reveal {
+    opacity: 0;
+    transform: translate3d(0, var(--sh-reveal-y, 22px), 0);
+    transition:
+      opacity 720ms cubic-bezier(.22,.61,.36,1),
+      transform 820ms cubic-bezier(.22,.61,.36,1);
+    will-change: opacity, transform;
+  }
+  .sh-reveal.is-in { opacity: 1; transform: none; }
+
+  /* ── Kartu: tilt + sorot kursor + garis tepi hidup ────────────────── */
+  .sh-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition:
+      transform 420ms cubic-bezier(.22,.61,.36,1),
+      box-shadow 420ms cubic-bezier(.22,.61,.36,1),
+      border-color 300ms ease;
+    will-change: transform;
+  }
+  .sh-card::before {
+    /* sorot cahaya mengikuti kursor */
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in srgb, var(--sh-accent) 26%, transparent),
+      transparent 70%);
+    opacity: 0;
+    transition: opacity 380ms ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .sh-card:hover::before { opacity: 1; }
+  .sh-card::after {
+    /* garis tepi bercahaya tipis */
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--sh-accent) 70%, transparent),
+      transparent 46%,
+      color-mix(in srgb, var(--sh-primary) 55%, transparent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 380ms ease;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .sh-card:hover::after { opacity: .9; }
+  .sh-card:hover {
+    box-shadow:
+      0 24px 60px -24px color-mix(in srgb, var(--sh-primary) 55%, transparent),
+      0 8px 22px -12px rgba(0,0,0,.28);
+  }
+  .sh-card__cover img { transition: transform 900ms cubic-bezier(.22,.61,.36,1), filter 600ms ease; }
+  .sh-card:hover .sh-card__cover img { transform: scale(1.06); filter: saturate(1.08) contrast(1.03); }
+
+  /* kilau melintas sekali saat kartu masuk */
+  .sh-card__sheen {
+    position: absolute; inset: 0; pointer-events: none; z-index: 4;
+    background: linear-gradient(105deg,
+      transparent 32%,
+      color-mix(in srgb, #fff 42%, transparent) 46%,
+      transparent 60%);
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  .sh-card.is-in .sh-card__sheen,
+  .sh-card-wrap.is-in .sh-card__sheen { animation: shSheen 1.15s ease-out .18s 1 forwards; }
+  @keyframes shSheen {
+    0%   { transform: translateX(-120%); opacity: .0; }
+    22%  { opacity: .85; }
+    100% { transform: translateX(120%); opacity: 0; }
+  }
+
+  /* ── Bingkai sudut gaya galeri ────────────────────────────────────── */
+  .sh-frame { position: relative; }
+  .sh-frame__c {
+    position: absolute; width: 14px; height: 14px;
+    border-color: var(--sh-accent);
+    border-style: solid; border-width: 0;
+    opacity: .8; pointer-events: none;
+  }
+  .sh-frame__c--tl { top: 8px; left: 8px; border-top-width: 1.5px; border-left-width: 1.5px; }
+  .sh-frame__c--tr { top: 8px; right: 8px; border-top-width: 1.5px; border-right-width: 1.5px; }
+  .sh-frame__c--bl { bottom: 8px; left: 8px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+  .sh-frame__c--br { bottom: 8px; right: 8px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .sh-noframe .sh-frame__c { display: none; }
+
+  /* ── Nomor seksi editorial ────────────────────────────────────────── */
+  .sh-index {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+    color: var(--sh-muted);
+    font-family: var(--sh-font-display);
+  }
+  .sh-index__num {
+    font-size: .78rem; font-weight: 700; letter-spacing: .18em;
+    color: var(--sh-accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .sh-index__rule {
+    display: block; width: 40px; height: 1px;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--sh-accent) 85%, transparent), transparent);
+    transform-origin: left center;
+    animation: shRule 1.1s cubic-bezier(.22,.61,.36,1) both;
+  }
+  .sh-index__label { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; opacity: .75; }
+  @keyframes shRule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* ── Judul seksi: sapuan garis bawah saat masuk ───────────────────── */
+  .sh-heading {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+  }
+  .sh-heading::after {
+    content: '';
+    position: absolute; left: 0; bottom: 0;
+    height: 2px; width: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg,
+      var(--sh-primary), var(--sh-accent) 55%, transparent);
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform 900ms cubic-bezier(.22,.61,.36,1) .12s;
+  }
+  .sh-reveal.is-in .sh-heading::after { transform: scaleX(1); }
+
+  /* ── Teks judul dengan gradien tinta ──────────────────────────────── */
+  .sh-ink {
+    background: linear-gradient(96deg,
+      var(--sh-text) 0%,
+      color-mix(in srgb, var(--sh-primary) 72%, var(--sh-text)) 52%,
+      var(--sh-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 100%;
+    animation: shInk 14s ease-in-out infinite alternate;
+  }
+  @keyframes shInk {
+    from { background-position: 0% 50%; }
+    to   { background-position: 100% 50%; }
+  }
+
+  /* ── Avatar / logo hero: cincin cahaya berputar ───────────────────── */
+  .sh-avatar-ring { position: relative; display: inline-grid; place-items: center; }
+  .sh-avatar-ring::before {
+    content: '';
+    position: absolute; inset: -7px;
+    border-radius: inherit;
+    background: conic-gradient(from 0deg,
+      transparent 0 22%,
+      color-mix(in srgb, var(--sh-accent) 90%, transparent) 34%,
+      transparent 46% 100%);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
+    animation: shSpin 9s linear infinite;
+    opacity: .9;
+  }
+
+  /* ── Chip statistik: mengambang halus ─────────────────────────────── */
+  .sh-chip {
+    transition: transform 320ms cubic-bezier(.22,.61,.36,1), background 320ms ease;
+    backdrop-filter: blur(8px);
+  }
+  .sh-chip:hover { transform: translateY(-2px); }
+
+  /* ── Garis pemisah beranimasi ─────────────────────────────────────── */
+  .sh-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--sh-accent) 55%, transparent) 50%, transparent);
+    opacity: .7;
+  }
+
   /* ── Gerak dibatasi bila pengguna minta reduced motion ────────────── */
+  /* tilt hanya untuk perangkat ber-kursor presisi (desktop), bukan layar sentuh */
+  @media (hover: none), (pointer: coarse) {
+    .sh-card { transform: none !important; }
+    .sh-card::before, .sh-card::after { display: none !important; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
@@ -312,5 +613,10 @@
     .animate-slide-in-right {
       transform: none !important;
     }
+    .sh-reveal { opacity: 1 !important; transform: none !important; }
+    .sh-card { transform: none !important; }
+    .sh-card::before, .sh-card::after, .sh-card__sheen { display: none !important; }
+    .sh-static { animation: none !important; }
+    .sh-ornament__draw { stroke-dashoffset: 0 !important; }
   }
 }

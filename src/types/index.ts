@@ -870,8 +870,32 @@ export interface ShareConfig {
   card: ShareCardStyle;
   /** Susunan & visibilitas section. */
   sections: ShareSection[];
+  /** Lapisan artistik (aurora, grain, ornamen, tilt, parallax). Opsional untuk data lama. */
+  decor?: ShareDecor;
   /** Kunci tombol kontak/sosial aktif untuk data lama (opsional). */
   version?: number;
+}
+
+/** Pengaturan lapisan artistik halaman publik. Semua opsional → data lama tetap tampil. */
+export interface ShareDecor {
+  /** Cahaya aurora mengalir di latar belakang. */
+  aurora: boolean;
+  /** Kekuatan aurora: halus | sedang | pekat. */
+  auroraIntensity: 'halus' | 'sedang' | 'pekat';
+  /** Tekstur butir film halus. */
+  grain: boolean;
+  /** Opasitas grain 0–0.15. */
+  grainOpacity: number;
+  /** Ornamen garis: none | arc | orbit | wave. */
+  ornament: 'none' | 'arc' | 'orbit' | 'wave';
+  /** Kartu miring mengikuti kursor + sorot cahaya. */
+  tilt: boolean;
+  /** Latar hero bergeser saat digulir. */
+  parallax: boolean;
+  /** Jeda animasi masuk antar kartu (ms). */
+  stagger: number;
+  /** Bingkai sudut gaya galeri pada blok teks. */
+  frame: boolean;
 }
 
 export interface ShareIdentity {
@@ -1062,6 +1086,17 @@ export const DEFAULT_SHARE_CONFIG: ShareConfig = {
     showShareButton: true,
     hoverLift: true,
     featuredIds: [],
+  },
+  decor: {
+    aurora: true,
+    auroraIntensity: 'sedang',
+    grain: true,
+    grainOpacity: 0.05,
+    ornament: 'arc',
+    tilt: true,
+    parallax: true,
+    stagger: 70,
+    frame: false,
   },
   sections: DEFAULT_SHARE_SECTIONS,
 };

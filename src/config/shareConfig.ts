@@ -3,6 +3,7 @@ import {
   DEFAULT_SHARE_SECTIONS,
   type ShareConfig,
   type ShareSection,
+  type ShareDecor,
 } from '../types';
 import { getTheme, DEFAULT_THEME_ID, FONT_PAIRINGS, type ThemeDef } from '../config/dashboardThemes';
 
@@ -59,9 +60,24 @@ export function normalizeShareConfig(raw: any): ShareConfig {
       columns: c.layout?.columns && [2, 3, 4].includes(Number(c.layout.columns)) ? Number(c.layout.columns) : ([2, 3, 4].includes(Number(c.columns)) ? Number(c.columns) : d.layout.columns),
     },
     card: { ...d.card, ...(c.card || {}) },
+    // lapisan artistik: default aman untuk data lama (tanpa `decor`)
+    decor: { ...DEFAULT_DECOR, ...(c.decor || {}) },
     sections,
   };
 }
+
+/** Default lapisan artistik — dipakai bila config lama belum punya `decor`. */
+export const DEFAULT_DECOR: ShareDecor = {
+  aurora: true,
+  auroraIntensity: 'sedang',
+  grain: true,
+  grainOpacity: 0.05,
+  ornament: 'arc',
+  tilt: true,
+  parallax: true,
+  stagger: 70,
+  frame: false,
+};
 
 export function themeOf(cfg: ShareConfig): ThemeDef {
   return getTheme(cfg.template || DEFAULT_THEME_ID);

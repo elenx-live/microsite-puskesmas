@@ -178,6 +178,63 @@ export const BackgroundPanel: React.FC<{ cfg: ShareConfig; update: Upd }> = ({ c
   );
 };
 
+/* ── SENTUHAN SENI (lapisan artistik) ────────────────────────────────── */
+export const DecorPanel: React.FC<{ cfg: ShareConfig; update: Upd }> = ({ cfg, update }) => {
+  const d = cfg.decor || {
+    aurora: true, auroraIntensity: 'sedang', grain: true, grainOpacity: 0.05,
+    ornament: 'arc', tilt: true, parallax: true, stagger: 70, frame: false,
+  };
+  const patch = (fn: (x: any) => void) => update((c) => {
+    c.decor = { ...d };
+    fn(c.decor);
+  });
+
+  return (
+    <div className="flex flex-col gap-3.5">
+      <Head title="Sentuhan Seni" desc="Cahaya, tekstur, dan gerak halus — pengaruh langsung ke halaman publik." />
+
+      <Toggle label="Cahaya aurora" checked={d.aurora} onChange={(v) => patch((x) => { x.aurora = v; })} />
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-400">Tiga bidang cahaya lembut yang mengalir di latar.</p>
+      {d.aurora && (
+        <Field label="Kekuatan cahaya">
+          <Segmented value={d.auroraIntensity} cols={3}
+            onChange={(v) => patch((x) => { x.auroraIntensity = v; })}
+            options={[{ value: 'halus', label: 'Halus' }, { value: 'sedang', label: 'Sedang' }, { value: 'pekat', label: 'Pekat' }]} />
+        </Field>
+      )}
+
+      <Toggle label="Butir film (grain)" checked={d.grain} onChange={(v) => patch((x) => { x.grain = v; })} />
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-400">Tekstur halus supaya tidak terasa datar.</p>
+      {d.grain && (
+        <Range label="Kekuatan butir" value={Math.round(d.grainOpacity * 1000) / 10} min={1} max={12} step={0.5} suffix="%"
+          onChange={(v) => patch((x) => { x.grainOpacity = v / 100; })} />
+      )}
+
+      <Field label="Ornamen garis">
+        <Segmented value={d.ornament} cols={4}
+          onChange={(v) => patch((x) => { x.ornament = v; })}
+          options={[{ value: 'none', label: 'Tidak' }, { value: 'arc', label: 'Lengkung' }, { value: 'orbit', label: 'Orbit' }, { value: 'wave', label: 'Gelombang' }]} />
+      </Field>
+
+      <Toggle label="Kartu miring mengikuti kursor" checked={d.tilt} onChange={(v) => patch((x) => { x.tilt = v; })} />
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-400">Kartu sedikit menoleh + sorot cahaya saat disentuh kursor.</p>
+
+      <Toggle label="Parallax hero" checked={d.parallax} onChange={(v) => patch((x) => { x.parallax = v; })} />
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-400">Latar hero bergeser pelan saat halaman digulir.</p>
+
+      <Range label="Jeda animasi antar kartu" value={d.stagger} min={0} max={200} step={10} suffix=" ms"
+        onChange={(v) => patch((x) => { x.stagger = v; })} />
+
+      <Toggle label="Bingkai sudut pada blok teks" checked={d.frame} onChange={(v) => patch((x) => { x.frame = v; })} />
+      <p className="-mt-2 text-[11px] leading-relaxed text-slate-400">Empat sudut tipis gaya galeri seni.</p>
+
+      <p className="text-[11px] leading-relaxed opacity-60">
+        Semua gerak otomatis berhenti bila pengunjung mengaktifkan “kurangi gerakan” di perangkatnya.
+      </p>
+    </div>
+  );
+};
+
 /* ── TYPOGRAPHY ──────────────────────────────────────────────────────── */
 export const TypographyPanel: React.FC<{ cfg: ShareConfig; update: Upd }> = ({ cfg, update }) => {
   const t = cfg.typography;

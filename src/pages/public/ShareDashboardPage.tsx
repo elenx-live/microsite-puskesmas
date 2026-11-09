@@ -8,6 +8,10 @@ import {
   ArrowRight, Construction, Mail, Phone, MapPin, Instagram, Facebook,
   Youtube, MessageCircle, Twitter, Linkedin, Music2, Star,
 } from 'lucide-react';
+import {
+  Aurora, Grain, Ornament, Reveal, CornerFrame, SectionIndex,
+  decorOf, useDecor, usePointerGlow, usePrefersReducedMotion, useParallax,
+} from './shareArt';
 
 /**
  * Dashboard publik pengelola — /share/<slug>
@@ -47,8 +51,9 @@ function socialIcon(platform: string, cls = 'h-4 w-4') {
 }
 
 /** Kartu microsite — gaya mengikuti config.card & tema. */
-const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig }> = ({ m, cfg }) => {
+const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig; index?: number; decor?: ReturnType<typeof decorOf> }> = ({ m, cfg, index = 0, decor }) => {
   const card = cfg.card;
+  const d = decor || decorOf(cfg);
   const aspect = card.imageRatio === 'hidden' ? '' : card.imageRatio === 'square' ? 'aspect-square' : 'aspect-[16/9]';
   const pad = cfg.layout.cardSize === 'compact' ? 'p-4' : cfg.layout.cardSize === 'large' ? 'p-6' : 'p-5';
   const styleBg: React.CSSProperties = card.style === 'gradient'
@@ -59,37 +64,46 @@ const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig }> = ({ m, 
         ? { background: 'var(--sh-surface)', border: '1px solid var(--sh-border)', color: 'var(--sh-text)' }
         : card.style === 'flat'
           ? { background: 'var(--sh-surface-alt)', color: 'var(--sh-text)' }
-          : { background: 'var(--sh-surface)', color: 'var(--sh-text)', boxShadow: '0 10px 30px -12px rgba(0,0,0,.18)' };
+          : { background: 'var(--sh-surface)', color: 'var(--sh-text)', border: '1px solid color-mix(in srgb, var(--sh-border) 70%, transparent)' };
 
   const cover = m.bannerImageUrl || m.backgroundImageUrl || m.ogImageUrl;
   const linkCount = Array.isArray(m.links) ? m.links.length : 0;
 
+  const glowRef = usePointerGlow<HTMLAnchorElement>();
+  const reduced = usePrefersReducedMotion();
+
   return (
-    <a href={`/m/${m.slug || m.id}`}
-      className={`group block overflow-hidden transition-all ${card.hoverLift ? 'hover:-translate-y-1 hover:shadow-2xl' : ''}`}
-      style={{ ...styleBg, borderRadius: 'var(--sh-radius)' }}>
-      {cover && card.imageRatio !== 'hidden' && (
-        <div className={`w-full overflow-hidden ${aspect}`}>
-          <img src={cover} alt={m.name} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+    <Reveal delay={Math.min(index, 8) * (d.stagger || 0)} y={26} className="sh-card-wrap">
+      <a
+        ref={glowRef}
+        href={`/m/${m.slug || m.id}`}
+        className={`group sh-card block overflow-hidden ${card.hoverLift && !reduced ? 'hover:-translate-y-1' : ''}`}
+        style={{ ...styleBg, borderRadius: 'var(--sh-radius)' }}
+      >
+        <span className="sh-card__sheen" aria-hidden />
+        {cover && card.imageRatio !== 'hidden' && (
+          <div className={`sh-card__cover w-full overflow-hidden ${aspect}`}>
+            <img src={cover} alt={m.name} loading="lazy" className="h-full w-full object-cover" />
+          </div>
+        )}
+        <div className={pad}>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-lg font-semibold leading-snug" style={{ fontFamily: 'var(--sh-font-display)' }}>{m.name}</h3>
+            <ArrowRight className="mt-1 h-4 w-4 shrink-0 opacity-60 transition-transform group-hover:translate-x-1" />
+          </div>
+          {card.showCategory && m.category && (
+            <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={{ background: 'color-mix(in srgb, var(--sh-accent) 20%, transparent)' }}>{m.category}</span>
+          )}
+          {card.showDescription && m.description && (
+            <p className="mt-2 line-clamp-2 text-sm opacity-80" style={{ lineHeight: 'var(--sh-lh)' }}>{m.description}</p>
+          )}
+          {card.showLinkCount && linkCount > 0 && (
+            <div className="mt-3 flex items-center gap-1.5 text-xs opacity-70"><Link2 className="h-3.5 w-3.5" /> {linkCount} tautan</div>
+          )}
         </div>
-      )}
-      <div className={pad}>
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-semibold leading-snug" style={{ fontFamily: 'var(--sh-font-display)' }}>{m.name}</h3>
-          <ArrowRight className="mt-1 h-4 w-4 shrink-0 opacity-60 transition-transform group-hover:translate-x-1" />
-        </div>
-        {card.showCategory && m.category && (
-          <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ background: 'color-mix(in srgb, var(--sh-accent) 20%, transparent)' }}>{m.category}</span>
-        )}
-        {card.showDescription && m.description && (
-          <p className="mt-2 line-clamp-2 text-sm opacity-80" style={{ lineHeight: 'var(--sh-lh)' }}>{m.description}</p>
-        )}
-        {card.showLinkCount && linkCount > 0 && (
-          <div className="mt-3 flex items-center gap-1.5 text-xs opacity-70"><Link2 className="h-3.5 w-3.5" /> {linkCount} tautan</div>
-        )}
-      </div>
-    </a>
+      </a>
+    </Reveal>
   );
 };
 
@@ -149,6 +163,9 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
 
   const theme = useMemo(() => themeOf(cfg), [cfg]);
   const cssVars = useMemo(() => buildShareCssVars(cfg), [cfg]);
+  const decor = useDecor(cfg);
+  const reduced = usePrefersReducedMotion();
+  const heroParallax = useParallax(decor.parallax ? 0.1 : 0);
 
   useEffect(() => {
     const id = 'share-fonts-all';
@@ -213,7 +230,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
   const socials = cfg.identity?.socials || [];
 
   const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <h2 className="mb-5" style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h2)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)' }}>{children}</h2>
+    <h2 className="mb-5 sh-heading" style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h2)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)' }}>{children}</h2>
   );
 
   const renderGrid = (items: MicrositeEntity[], layout: string) => {
@@ -221,9 +238,9 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
       return <div className="rounded-2xl border border-dashed py-14 text-center text-sm" style={{ borderColor: 'var(--sh-border)', color: 'var(--sh-muted)' }}>{cfg.emptyText}</div>;
     }
     if (layout === 'list') {
-      return <div className="flex flex-col" style={{ gap: 'var(--sh-gap)' }}>{items.map((m) => <MicrositeCard key={m.id} m={m} cfg={cfg} />)}</div>;
+      return <div className="flex flex-col" style={{ gap: 'var(--sh-gap)' }}>{items.map((m, i) => <MicrositeCard key={m.id} m={m} cfg={cfg} index={i} decor={decor} />)}</div>;
     }
-    return <div className="share-grid" style={{ gap: 'var(--sh-gap)' }}>{items.map((m) => <MicrositeCard key={m.id} m={m} cfg={cfg} />)}</div>;
+    return <div className="share-grid" style={{ gap: 'var(--sh-gap)' }}>{items.map((m, i) => <MicrositeCard key={m.id} m={m} cfg={cfg} index={i} decor={decor} />)}</div>;
   };
 
   return (
@@ -253,7 +270,18 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
         )}
         {cfg.background?.type === 'pattern' && cfg.background.pattern !== 'none' && <div className={`sh-pattern sh-pattern-${cfg.background.pattern}`} aria-hidden />}
 
-        {sections.map((sec) => {
+        {/* ── Lapisan artistik: aurora + grain (dekoratif) ── */}
+        {decor.aurora && <Aurora intensity={decor.intensity} dark={theme.dark} />}
+        {decor.grain && <Grain opacity={decor.grainOpacity} />}
+
+        {sections.map((sec, secIdx) => {
+          /** header seksi: nomor editorial + reveal */
+          const sectionHead = (title?: string, label?: string) => (
+            <Reveal delay={0}>
+              <SectionIndex n={secIdx + 1} label={label} />
+              {title ? <SectionTitle>{title}</SectionTitle> : null}
+            </Reveal>
+          );
           if (sec.type === 'hero') {
             const isBold = theme.style.heroStyle === 'gradient' || theme.style.heroStyle === 'bold';
             const heroBg: React.CSSProperties = theme.style.heroStyle === 'gradient'
@@ -263,8 +291,22 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
                 : { background: 'linear-gradient(180deg, var(--sh-hero-from), transparent)' };
             const centered = cfg.typography?.align === 'center' || theme.style.heroStyle === 'editorial';
             return (
-              <header key={sec.id} className="relative overflow-hidden" style={heroBg}>
-                {cfg.identity?.coverUrl && <div className="absolute inset-0"><img src={cfg.identity.coverUrl} alt="" className="h-full w-full object-cover opacity-40" /></div>}
+              <header key={sec.id} className="relative overflow-hidden">
+                {/* latar hero + parallax + ornamen seniman */}
+                <div className="absolute inset-0" style={{ ...heroBg, transform: reduced ? undefined : `translate3d(0, ${heroParallax * 0.5}px, 0) scale(1.06)` }} />
+                {cfg.identity?.coverUrl && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <img src={cfg.identity.coverUrl} alt="" className="h-full w-full object-cover opacity-40"
+                      style={{ transform: reduced ? undefined : `translate3d(0, ${heroParallax}px, 0) scale(1.08)` }} />
+                  </div>
+                )}
+                {decor.ornament === 'orbit' && <Ornament variant="orbit" className="right-[-140px] top-[-170px] hidden sm:block" />}
+                {decor.ornament === 'arc' && <Ornament variant="arc" className="right-[-60px] bottom-[-90px] opacity-40" />}
+                {decor.ornament === 'wave' && (
+                  <div className="absolute inset-x-0 bottom-0" style={{ color: 'var(--sh-accent)' }}>
+                    <Ornament variant="wave" />
+                  </div>
+                )}
                 <div className="relative" style={{ ...containerStyle, paddingTop: '58px', paddingBottom: '46px' }}>
                   <div className={`flex flex-col gap-4 ${centered ? 'items-center text-center' : 'items-start'}`}>
                     {cfg.showBadge && cfg.badgeLabel && (
@@ -274,26 +316,41 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
                       </span>
                     )}
                     {cfg.showAvatar && (avatar ? (
-                      <img src={avatar} alt={ownerName} className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-lg sm:h-24 sm:w-24" />
+                      <Reveal delay={40}>
+                        <span className="sh-avatar-ring" style={{ borderRadius: 'var(--sh-radius)' }}>
+                          <img src={avatar} alt={ownerName} className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-lg sm:h-24 sm:w-24" style={{ borderRadius: 'var(--sh-radius)' }} />
+                        </span>
+                      </Reveal>
                     ) : (
-                      <span className="grid h-20 w-20 place-items-center rounded-2xl font-display text-3xl font-extrabold text-white shadow-lg sm:h-24 sm:w-24" style={{ background: 'var(--sh-primary)' }}>{initials}</span>
+                      <Reveal delay={40}>
+                        <span className="sh-avatar-ring" style={{ borderRadius: 'var(--sh-radius)' }}>
+                          <span className="grid h-20 w-20 place-items-center font-display text-3xl font-extrabold text-white shadow-lg sm:h-24 sm:w-24"
+                            style={{ background: 'var(--sh-primary)', borderRadius: 'var(--sh-radius)' }}>{initials}</span>
+                        </span>
+                      </Reveal>
                     ))}
-                    <h1 style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h1)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)', lineHeight: 1.12 }}>{displayName}</h1>
-                    {ownerName && ownerName !== displayName && <p className="text-sm font-medium opacity-80">{ownerName}</p>}
+                    <Reveal delay={110}>
+                      <h1 className="sh-ink" style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h1)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)', lineHeight: 1.12 }}>{displayName}</h1>
+                    </Reveal>
+                    {ownerName && ownerName !== displayName && <Reveal delay={170}><p className="text-sm font-medium opacity-80">{ownerName}</p></Reveal>}
                     {cfg.showTagline && (tagline || description) && (
-                      <p className={`max-w-2xl opacity-85 ${centered ? '' : ''}`}>{tagline || description}</p>
+                      <Reveal delay={220}>
+                        <p className={`max-w-2xl opacity-85 ${centered ? 'mx-auto' : ''}`}>{tagline || description}</p>
+                      </Reveal>
                     )}
                     {cfg.showStats && (
-                      <div className="flex flex-wrap items-center gap-3 pt-1 text-sm">
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: 'color-mix(in srgb, var(--sh-text) 8%, transparent)' }}><Globe className="h-3.5 w-3.5" /> {microsites.length} microsite</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: 'color-mix(in srgb, var(--sh-text) 8%, transparent)' }}><Link2 className="h-3.5 w-3.5" /> {microsites.reduce((n, m) => n + (Array.isArray(m.links) ? m.links.length : 0), 0)} tautan</span>
-                        {cfg.showShareButton && (
-                          <button onClick={doShare} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-transform hover:-translate-y-0.5"
-                            style={{ background: 'var(--sh-button)', color: 'var(--sh-primary-fg)' }}>
-                            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? 'Tersalin' : 'Bagikan dashboard'}
-                          </button>
-                        )}
-                      </div>
+                      <Reveal delay={280}>
+                        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm">
+                          <span className="sh-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: 'color-mix(in srgb, var(--sh-text) 8%, transparent)' }}><Globe className="h-3.5 w-3.5" /> {microsites.length} microsite</span>
+                          <span className="sh-chip inline-flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: 'color-mix(in srgb, var(--sh-text) 8%, transparent)' }}><Link2 className="h-3.5 w-3.5" /> {microsites.reduce((n, m) => n + (Array.isArray(m.links) ? m.links.length : 0), 0)} tautan</span>
+                          {cfg.showShareButton && (
+                            <button onClick={doShare} className="sh-chip inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-transform hover:-translate-y-0.5"
+                              style={{ background: 'var(--sh-button)', color: 'var(--sh-primary-fg)' }}>
+                              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? 'Tersalin' : 'Bagikan dashboard'}
+                            </button>
+                          )}
+                        </div>
+                      </Reveal>
                     )}
                   </div>
                 </div>
@@ -320,7 +377,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!featured.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
+                {sectionHead(sec.title, 'Unggulan')}
                 {renderGrid(featured, sec.layout === 'grid' ? 'grid' : sec.layout)}
               </section>
             );
@@ -329,7 +386,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
           if (sec.type === 'microsites' || sec.type === 'categories') {
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
+                {sectionHead(sec.title, 'Koleksi')}
                 {renderGrid(microsites, sec.layout)}
               </section>
             );
@@ -340,8 +397,12 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!body && !sec.title) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
-                <p className="max-w-3xl whitespace-pre-line opacity-85">{body}</p>
+                {sectionHead(sec.title, sec.type === 'about' ? 'Tentang' : 'Catatan')}
+                <Reveal delay={90}>
+                  <CornerFrame className={decor.frame ? '' : 'sh-noframe'}>
+                    <p className="max-w-3xl whitespace-pre-line opacity-85 p-4 sm:p-5" style={{ background: decor.frame ? 'color-mix(in srgb, var(--sh-surface) 55%, transparent)' : undefined, borderRadius: 'var(--sh-radius)' }}>{body}</p>
+                  </CornerFrame>
+                </Reveal>
               </section>
             );
           }
@@ -351,9 +412,13 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!imgs.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
+                {sectionHead(sec.title, 'Galeri')}
                 <div className="share-grid" style={gridStyle()}>
-                  {imgs.map((src, i) => <img key={i} src={src} alt="" loading="lazy" className="aspect-square w-full object-cover" style={{ borderRadius: 'var(--sh-radius)' }} />)}
+                  {imgs.map((src, i) => (
+                    <Reveal key={i} delay={Math.min(i, 8) * (decor.stagger || 0)}>
+                      <img src={src} alt="" loading="lazy" className="sh-card aspect-square w-full object-cover" style={{ borderRadius: 'var(--sh-radius)' }} />
+                    </Reveal>
+                  ))}
                 </div>
               </section>
             );
@@ -363,16 +428,18 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!socials.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
-                <div className="flex flex-wrap gap-3">
-                  {socials.map((s) => (
-                    <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-transform hover:-translate-y-0.5"
-                      style={{ background: 'var(--sh-surface)', border: '1px solid var(--sh-border)', color: 'var(--sh-text)' }}>
-                      {socialIcon(s.platform)} {s.label || s.platform}
-                    </a>
-                  ))}
-                </div>
+                {sectionHead(sec.title, 'Jejaring')}
+                <Reveal delay={90}>
+                  <div className="flex flex-wrap gap-3">
+                    {socials.map((s) => (
+                      <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer"
+                        className="sh-chip inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-transform hover:-translate-y-0.5"
+                        style={{ background: 'var(--sh-surface)', border: '1px solid var(--sh-border)', color: 'var(--sh-text)' }}>
+                        {socialIcon(s.platform)} {s.label || s.platform}
+                      </a>
+                    ))}
+                  </div>
+                </Reveal>
               </section>
             );
           }
@@ -387,13 +454,15 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             if (!rows.length) return null;
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                {sec.title && <SectionTitle>{sec.title}</SectionTitle>}
+                {sectionHead(sec.title, 'Kontak')}
                 <div className="flex flex-col gap-3">
                   {rows.map((r, i) => (
-                    <div key={i} className="flex items-center gap-3 text-sm">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full" style={{ background: 'var(--sh-surface)', border: '1px solid var(--sh-border)' }}>{r.icon}</span>
-                      {r.href ? <a href={r.href} className="opacity-85 hover:opacity-100">{r.val}</a> : <span className="opacity-85">{r.val}</span>}
-                    </div>
+                    <Reveal key={i} delay={i * (decor.stagger || 0)}>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full" style={{ background: 'var(--sh-surface)', border: '1px solid var(--sh-border)' }}>{r.icon}</span>
+                        {r.href ? <a href={r.href} className="opacity-85 hover:opacity-100">{r.val}</a> : <span className="opacity-85">{r.val}</span>}
+                      </div>
+                    </Reveal>
                   ))}
                 </div>
               </section>
@@ -408,29 +477,35 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
             };
             return (
               <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
-                <div className="flex items-start gap-3 p-4" style={{ background: toneBg[sec.tone || 'info'], borderRadius: 'var(--sh-radius)', border: '1px solid var(--sh-border)' }}>
-                  <Star className="mt-0.5 h-4 w-4 shrink-0" />
-                  <div>
-                    {sec.title && <div className="font-semibold">{sec.title}</div>}
-                    {sec.content && <p className="mt-0.5 text-sm opacity-85 whitespace-pre-line">{sec.content}</p>}
+                <Reveal>
+                  <div className="flex items-start gap-3 p-4" style={{ background: toneBg[sec.tone || 'info'], borderRadius: 'var(--sh-radius)', border: '1px solid var(--sh-border)' }}>
+                    <Star className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>
+                      {sec.title && <div className="font-semibold">{sec.title}</div>}
+                      {sec.content && <p className="mt-0.5 text-sm opacity-85 whitespace-pre-line">{sec.content}</p>}
+                    </div>
                   </div>
-                </div>
+                </Reveal>
               </section>
             );
           }
 
           if (sec.type === 'footer') {
             return (
-              <footer key={sec.id} style={{ borderTop: '1px solid var(--sh-border)', background: 'var(--sh-surface)' }}>
-                <div className="flex flex-col items-center gap-3 text-center text-sm opacity-80" style={{ ...containerStyle, paddingTop: '26px', paddingBottom: '26px' }}>
-                  <div className="flex items-center gap-2 font-semibold" style={{ fontFamily: 'var(--sh-font-display)' }}><Globe className="h-4 w-4" /> {displayName}</div>
-                  {socials.length > 0 && (
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      {socials.map((s) => <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100">{socialIcon(s.platform)}</a>)}
-                    </div>
-                  )}
-                  <div className="text-xs opacity-70">© {new Date().getFullYear()} {ownerName || displayName} · Dibuat dengan Microsite Studio</div>
-                </div>
+              <footer key={sec.id} className="relative overflow-hidden" style={{ borderTop: '1px solid var(--sh-border)', background: 'var(--sh-surface)' }}>
+                {decor.ornament !== 'none' && <Ornament variant="arc" className="left-1/2 top-[-10px] -translate-x-1/2 opacity-15" />}
+                <Reveal>
+                  <div className="relative flex flex-col items-center gap-3 text-center text-sm opacity-80" style={{ ...containerStyle, paddingTop: '26px', paddingBottom: '26px' }}>
+                    <div className="sh-divider w-full max-w-sm" aria-hidden />
+                    <div className="flex items-center gap-2 font-semibold" style={{ fontFamily: 'var(--sh-font-display)' }}><Globe className="h-4 w-4" /> {displayName}</div>
+                    {socials.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        {socials.map((s) => <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100">{socialIcon(s.platform)}</a>)}
+                      </div>
+                    )}
+                    <div className="text-xs opacity-70">© {new Date().getFullYear()} {ownerName || displayName} · Dibuat dengan Microsite Studio</div>
+                  </div>
+                </Reveal>
               </footer>
             );
           }

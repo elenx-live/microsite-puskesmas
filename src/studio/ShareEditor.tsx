@@ -5,12 +5,12 @@ import { normalizeShareConfig } from '../config/shareConfig';
 import ShareDashboardPage from '../pages/public/ShareDashboardPage';
 import {
   TemplatePanel, IdentityPanel, BackgroundPanel, TypographyPanel,
-  ColorsPanel, LayoutPanel, CardPanel, SectionsPanel, SECTION_LABEL,
+  ColorsPanel, LayoutPanel, CardPanel, SectionsPanel, DecorPanel, SECTION_LABEL,
 } from './ShareEditor.panels';
 import {
   Palette, LayoutDashboard, Type as TypeIcon, Image as ImageIcon, Layers,
   Undo2, Redo2, Save, Eye, Rocket, Monitor, Tablet, Smartphone, X,
-  History, Pencil, Sparkles, ListTree, Loader2, ExternalLink,
+  History, Pencil, Sparkles, ListTree, Loader2, ExternalLink, Wand2,
 } from 'lucide-react';
 
 interface PreviewOwner { name: string; orgName: string | null; bio: string | null; avatarUrl: string | null; phone: string | null; }
@@ -24,7 +24,7 @@ interface ShareEditorProps {
   dashboardName?: string;
 }
 
-type Panel = 'template' | 'identity' | 'background' | 'typography' | 'colors' | 'layout' | 'card' | 'sections';
+type Panel = 'template' | 'identity' | 'background' | 'decor' | 'typography' | 'colors' | 'layout' | 'card' | 'sections';
 type Device = 'desktop' | 'tablet' | 'mobile';
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -34,6 +34,7 @@ const PANELS: { key: Panel; label: string; icon: React.ReactNode }[] = [
   { key: 'template', label: 'Tema', icon: <Sparkles className="h-4 w-4" /> },
   { key: 'identity', label: 'Identitas', icon: <Pencil className="h-4 w-4" /> },
   { key: 'background', label: 'Latar', icon: <ImageIcon className="h-4 w-4" /> },
+  { key: 'decor', label: 'Seni', icon: <Wand2 className="h-4 w-4" /> },
   { key: 'typography', label: 'Tipografi', icon: <TypeIcon className="h-4 w-4" /> },
   { key: 'colors', label: 'Warna', icon: <Palette className="h-4 w-4" /> },
   { key: 'layout', label: 'Layout', icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -357,6 +358,7 @@ export default function ShareEditor({ onExit, user, onNotify, dashboardId, dashb
           {panel === 'template' && <TemplatePanel cfg={cfg} onApply={applyTheme} />}
           {panel === 'identity' && <IdentityPanel cfg={cfg} update={update} slug={slug} setSlug={setSlug} title={title} setTitle={setTitle} tagline={tagline} setTagline={setTagline} owner={owner} />}
           {panel === 'background' && <BackgroundPanel cfg={cfg} update={update} />}
+          {panel === 'decor' && <DecorPanel cfg={cfg} update={update} />}
           {panel === 'typography' && <TypographyPanel cfg={cfg} update={update} />}
           {panel === 'colors' && <ColorsPanel cfg={cfg} update={update} />}
           {panel === 'layout' && <LayoutPanel cfg={cfg} update={update} />}

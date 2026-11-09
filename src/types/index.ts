@@ -995,7 +995,10 @@ export interface ShareSection {
 
 export type DashboardTemplateId =
   | 'minimalist' | 'premium' | 'gradient' | 'corporate'
-  | 'creative' | 'editorial' | 'nature' | 'artistic';
+  | 'creative' | 'editorial' | 'nature' | 'artistic'
+  /* gelombang kedua */
+  | 'midnight' | 'sunset' | 'ocean' | 'terracotta' | 'neon'
+  | 'botanical' | 'monochrome' | 'aurora' | 'sakura' | 'gouvernement';
 
 /* ── Section default (urutan awal) ──────────────────────────────────── */
 export const DEFAULT_SHARE_SECTIONS: ShareSection[] = [

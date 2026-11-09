@@ -7,6 +7,7 @@ import {
   Globe, Link2, LayoutGrid, Share2, Copy, Check, Loader2, Compass,
   ArrowRight, Construction, Mail, Phone, MapPin, Instagram, Facebook,
   Youtube, MessageCircle, Twitter, Linkedin, Music2, Star,
+  Search, X, ChevronDown,
 } from 'lucide-react';
 import {
   Aurora, Grain, Ornament, Reveal, CornerFrame, SectionIndex,
@@ -51,7 +52,7 @@ function socialIcon(platform: string, cls = 'h-4 w-4') {
 }
 
 /** Kartu microsite — gaya mengikuti config.card & tema. */
-const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig; index?: number; decor?: ReturnType<typeof decorOf> }> = ({ m, cfg, index = 0, decor }) => {
+const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig; index?: number; decor?: ReturnType<typeof decorOf>; id?: string; highlight?: boolean }> = ({ m, cfg, index = 0, decor, id, highlight }) => {
   const card = cfg.card;
   const d = decor || decorOf(cfg);
   const aspect = card.imageRatio === 'hidden' ? '' : card.imageRatio === 'square' ? 'aspect-square' : 'aspect-[16/9]';
@@ -76,8 +77,9 @@ const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig; index?: nu
     <Reveal delay={Math.min(index, 8) * (d.stagger || 0)} y={26} className="sh-card-wrap">
       <a
         ref={glowRef}
+        id={id}
         href={`/m/${m.slug || m.id}`}
-        className={`group sh-card block overflow-hidden ${card.hoverLift && !reduced ? 'hover:-translate-y-1' : ''}`}
+        className={`group sh-card block overflow-hidden ${card.hoverLift && !reduced ? 'hover:-translate-y-1' : ''} ${highlight ? 'sh-card--hit' : ''}`}
         style={{ ...styleBg, borderRadius: 'var(--sh-radius)' }}
       >
         <span className="sh-card__sheen" aria-hidden />
@@ -92,7 +94,7 @@ const MicrositeCard: React.FC<{ m: MicrositeEntity; cfg: ShareConfig; index?: nu
             <ArrowRight className="mt-1 h-4 w-4 shrink-0 opacity-60 transition-transform group-hover:translate-x-1" />
           </div>
           {card.showCategory && m.category && (
-            <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+            <span className="sh-tier-chip mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
               style={{ background: 'color-mix(in srgb, var(--sh-accent) 20%, transparent)' }}>{m.category}</span>
           )}
           {card.showDescription && m.description && (
@@ -177,7 +179,9 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
 
   const sections = useMemo(() => (cfg.sections || []).filter((s) => s.visible), [cfg.sections]);
   const featuredIds = cfg.card?.featuredIds || [];
-  const featured = microsites.filter((m) => featuredIds.includes(m.id) || featuredIds.includes(m.slug));
+  const featuredPicked = microsites.filter((m) => featuredIds.includes(m.id) || featuredIds.includes(m.slug));
+  // tanpa pilihan unggulan: pakai 3 teratas supaya tab "Unggulan" tetap bermakna
+  const featured = featuredPicked.length ? featuredPicked : microsites.slice(0, 3);
 
   const containerStyle: React.CSSProperties = { maxWidth: 'var(--sh-container)', marginInline: 'auto', paddingInline: '20px' };
   const gridStyle = (): React.CSSProperties => ({
@@ -194,6 +198,19 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
       setCopied(true); setTimeout(() => setCopied(false), 1800);
     } catch { /* dibatalkan */ }
   };
+
+  /* ── Navigasi koleksi: state wajib SEBELUM early-return apa pun ── */
+  const hasFeatured = featured.length > 0;
+  const [navTab, setNavTab] = useState<'featured' | 'all'>('all');
+  const [query, setQuery] = useState('');
+  const [jump, setJump] = useState<string | null>(null);
+  const navInit = React.useRef(false);
+
+  React.useEffect(() => {
+    if (navInit.current) return;
+    navInit.current = true;
+    setNavTab(hasFeatured ? 'featured' : 'all');
+  }, [hasFeatured]);
 
   if (loading) {
     return (
@@ -222,6 +239,90 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
     );
   }
 
+  /* ── Bar navigasi koleksi: tab, pencarian, dan daftar cepat ── */
+  const CollectionNav: React.FC<{
+    active: 'featured' | 'all';
+    onTab: (t: 'featured' | 'all') => void;
+    query: string;
+    onQuery: (v: string) => void;
+    featuredCount: number;
+    allCount: number;
+    featured: MicrositeEntity[];
+    onPick: (id: string) => void;
+    cfg: ShareConfig;
+  }> = ({ active, onTab, query, onQuery, featuredCount, allCount, featured, onPick }) => {
+    const [open, setOpen] = useState(false);
+    const hasBoth = featuredCount > 0;
+    const tabLabelAll = allCount > 0 ? allCount : 0;
+    const tabsRef = React.useRef<HTMLDivElement>(null);
+    const [ink, setInk] = useState({ left: 3, width: 0 });
+
+    // ukur posisi tab aktif untuk menggeser "tinta" penyorot
+    React.useEffect(() => {
+      const wrap = tabsRef.current;
+      if (!wrap) return;
+      const btn = wrap.querySelector<HTMLButtonElement>(`[data-tab="${active}"]`);
+      if (!btn) return;
+      const measure = () => setInk({ left: btn.offsetLeft, width: btn.offsetWidth });
+      measure();
+      const ro = new ResizeObserver(measure);
+      ro.observe(wrap);
+      return () => ro.disconnect();
+    }, [active, featuredCount, featuredCount > 0]);
+
+    return (
+      <div className="sh-nav">
+        <div className="sh-nav__bar">
+          {hasBoth && (
+            <div className="sh-tabs" role="tablist" aria-label="Kelompok microsite" ref={tabsRef}>
+              <button role="tab" data-tab="featured" aria-selected={active === 'featured'} onClick={() => onTab('featured')}
+                className={`sh-tab ${active === 'featured' ? 'is-on' : ''}`}>
+                <Star className="h-3.5 w-3.5" /> Unggulan
+                <span className="sh-tab__n">{featuredCount}</span>
+              </button>
+              <button role="tab" data-tab="all" aria-selected={active === 'all'} onClick={() => onTab('all')}
+                className={`sh-tab ${active === 'all' ? 'is-on' : ''}`}>
+                <LayoutGrid className="h-3.5 w-3.5" /> Semua
+                <span className="sh-tab__n">{allCount}</span>
+              </button>
+              <span className="sh-tabs__ink" aria-hidden style={{ left: ink.left, width: ink.width }} />
+            </div>
+          )}
+
+          {hasBoth && (
+            <button className="sh-jump" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+              Lompat ke <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+          )}
+
+          <label className="sh-search">
+            <Search className="h-4 w-4 shrink-0 opacity-55" />
+            <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Cari microsite…"
+              className="w-full bg-transparent text-sm outline-none" aria-label="Cari microsite" />
+            {query && (
+              <button onClick={() => onQuery('')} aria-label="Hapus pencarian" className="sh-search__x">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </label>
+        </div>
+
+        {open && featured.length > 0 && (
+          <div className="sh-jump__panel">
+            <p className="sh-jump__hint">Pilihan unggulan — ketuk untuk menuju kartunya</p>
+            <div className="flex flex-wrap gap-2">
+              {featured.map((m) => (
+                <button key={m.id} onClick={() => { onPick(m.id); setOpen(false); }} className="sh-chip">
+                  <Star className="h-3 w-3" /> {m.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const displayName = cfg.identity?.dashboardName || title || owner.orgName || owner.name || 'Pengelola';
   const ownerName = cfg.identity?.ownerName || owner.orgName || owner.name || '';
   const avatar = cfg.identity?.logoUrl || owner.avatarUrl;
@@ -229,18 +330,58 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
   const initials = (ownerName || displayName).slice(0, 1).toUpperCase();
   const socials = cfg.identity?.socials || [];
 
+  /* ── Navigasi koleksi: tab Unggulan/Semua + pencarian + sorot ── */
+
+  const goToTab = (tab: 'featured' | 'all') => {
+    setNavTab(tab);
+    // biarkan render selesai, lalu gulir halus ke seksi terkait
+    requestAnimationFrame(() => {
+      const target = document.getElementById(tab === 'featured' ? 'sh-sec-featured' : 'sh-sec-all');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const onPick = (id: string) => {
+    setJump(id);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`sh-card-${id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    window.setTimeout(() => setJump(null), 2600);
+  };
+
+  const q = query.trim().toLowerCase();
+  const matches = (m: MicrositeEntity) =>
+    !q || [m.name, m.category, m.description, m.slug].filter(Boolean).join(' ').toLowerCase().includes(q);
+  const shownFeatured = featured.filter(matches);
+  const shownAll = microsites.filter(matches);
+
   const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <h2 className="mb-5 sh-heading" style={{ fontFamily: 'var(--sh-font-display)', fontSize: 'var(--sh-h2)', fontWeight: 'var(--sh-hweight)' as any, letterSpacing: 'var(--sh-tracking)' }}>{children}</h2>
   );
 
   const renderGrid = (items: MicrositeEntity[], layout: string) => {
     if (!items.length) {
-      return <div className="rounded-2xl border border-dashed py-14 text-center text-sm" style={{ borderColor: 'var(--sh-border)', color: 'var(--sh-muted)' }}>{cfg.emptyText}</div>;
+      const emptyMsg = q ? `Tidak ada microsite yang cocok dengan “${query}”.` : cfg.emptyText;
+      return (
+        <div className="rounded-2xl border border-dashed py-14 text-center text-sm" style={{ borderColor: 'var(--sh-border)', color: 'var(--sh-muted)' }}>
+          {emptyMsg}
+          {q && (
+            <button onClick={() => setQuery('')} className="mx-auto mt-3 block rounded-full px-4 py-1.5 text-xs font-medium sh-reset"
+              style={{ border: '1px solid var(--sh-border)', color: 'var(--sh-text)' }}>
+              Hapus pencarian
+            </button>
+          )}
+        </div>
+      );
     }
+    const card = (m: MicrositeEntity, i: number) => (
+      <MicrositeCard key={m.id} m={m} cfg={cfg} index={i} decor={decor} id={`sh-card-${m.id}`} highlight={jump === m.id} />
+    );
     if (layout === 'list') {
-      return <div className="flex flex-col" style={{ gap: 'var(--sh-gap)' }}>{items.map((m, i) => <MicrositeCard key={m.id} m={m} cfg={cfg} index={i} decor={decor} />)}</div>;
+      return <div className="flex flex-col" style={{ gap: 'var(--sh-gap)' }}>{items.map(card)}</div>;
     }
-    return <div className="share-grid" style={{ gap: 'var(--sh-gap)' }}>{items.map((m, i) => <MicrositeCard key={m.id} m={m} cfg={cfg} index={i} decor={decor} />)}</div>;
+    return <div className="share-grid" style={{ gap: 'var(--sh-gap)' }}>{items.map(card)}</div>;
   };
 
   return (
@@ -250,9 +391,11 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
         data-share-dark={theme.dark ? '1' : '0'}
         style={{
           ...cssVars,
-          background: 'var(--sh-bg)',
+          background: 'transparent',
           color: 'var(--sh-text)',
           minHeight: '100vh',
+          position: 'relative',
+          isolation: 'isolate',
           fontFamily: 'var(--sh-font-body)',
           fontSize: 'var(--sh-base-size)',
           lineHeight: 'var(--sh-lh)',
@@ -310,7 +453,7 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
                 <div className="relative" style={{ ...containerStyle, paddingTop: '58px', paddingBottom: '46px' }}>
                   <div className={`flex flex-col gap-4 ${centered ? 'items-center text-center' : 'items-start'}`}>
                     {cfg.showBadge && cfg.badgeLabel && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]"
+                      <span className="sh-badge-strong inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]"
                         style={{ background: isBold ? 'rgba(255,255,255,.18)' : 'color-mix(in srgb, var(--sh-accent) 20%, transparent)' }}>
                         <Share2 className="h-3.5 w-3.5" /> {cfg.badgeLabel}
                       </span>
@@ -376,18 +519,24 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
           if (sec.type === 'featured') {
             if (!featured.length) return null;
             return (
-              <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
+              <section id="sh-sec-featured" key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
                 {sectionHead(sec.title, 'Unggulan')}
-                {renderGrid(featured, sec.layout === 'grid' ? 'grid' : sec.layout)}
+                <CollectionNav active={navTab} onTab={goToTab} query={query} onQuery={setQuery}
+                  featuredCount={featured.length} allCount={microsites.length}
+                  featured={featured} onPick={onPick} cfg={cfg} />
+                {renderGrid(navTab === 'all' ? shownAll : shownFeatured, sec.layout === 'grid' ? 'grid' : sec.layout)}
               </section>
             );
           }
 
           if (sec.type === 'microsites' || sec.type === 'categories') {
             return (
-              <section key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
+              <section id="sh-sec-all" key={sec.id} style={{ ...containerStyle, paddingTop: '8px', paddingBottom: 'var(--sh-space)' }}>
                 {sectionHead(sec.title, 'Koleksi')}
-                {renderGrid(microsites, sec.layout)}
+                <CollectionNav active={navTab} onTab={goToTab} query={query} onQuery={setQuery}
+                  featuredCount={featured.length} allCount={microsites.length}
+                  featured={featured} onPick={onPick} cfg={cfg} />
+                {renderGrid(navTab === 'featured' ? shownFeatured : shownAll, sec.layout)}
               </section>
             );
           }

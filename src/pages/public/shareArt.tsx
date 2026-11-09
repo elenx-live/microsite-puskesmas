@@ -50,17 +50,56 @@ export function useInView<T extends HTMLElement>(opts?: { once?: boolean; margin
   return { ref, inView };
 }
 
-/* ── 1. Aurora: tiga bidang cahaya lembut yang mengalir ───────────────────── */
+/* ── 1. Latar seni: cahaya, kontur topografi, dan garis tangan ───────────── */
 
-type AuroraProps = { intensity?: 'halus' | 'sedang' | 'pekat'; dark?: boolean };
-export const Aurora: React.FC<AuroraProps> = ({ intensity = 'sedang', dark }) => {
+type AuroraProps = { intensity?: 'halus' | 'sedang' | 'pekat'; dark?: boolean; variant?: string };
+export const Aurora: React.FC<AuroraProps> = ({ intensity = 'sedang', dark, variant = 'aurora' }) => {
   const reduced = usePrefersReducedMotion();
-  const op = intensity === 'halus' ? 0.28 : intensity === 'pekat' ? 0.72 : 0.45;
+  const op = intensity === 'halus' ? 0.55 : intensity === 'pekat' ? 1 : 0.8;
+  const still = reduced ? 'sh-static' : '';
   return (
-    <div className="sh-aurora" data-dark={dark ? '1' : '0'} aria-hidden style={{ opacity: op }}>
-      <span className={`sh-aurora__blob sh-aurora__blob--a ${reduced ? 'sh-static' : ''}`} />
-      <span className={`sh-aurora__blob sh-aurora__blob--b ${reduced ? 'sh-static' : ''}`} />
-      <span className={`sh-aurora__blob sh-aurora__blob--c ${reduced ? 'sh-static' : ''}`} />
+    <div className="sh-aurora" data-dark={dark ? '1' : '0'} data-variant={variant} aria-hidden style={{ opacity: op }}>
+      {/* cahaya */}
+      <span className={`sh-aurora__blob sh-aurora__blob--a ${still}`} />
+      <span className={`sh-aurora__blob sh-aurora__blob--b ${still}`} />
+      <span className={`sh-aurora__blob sh-aurora__blob--c ${still}`} />
+
+      {/* kontur topografi — garis sepusat yang mengalir pelan */}
+      <svg className={`sh-contour ${still}`} viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" fill="none">
+        {Array.from({ length: 18 }).map((_, i) => (
+          <ellipse key={`a${i}`} cx={940} cy={120} rx={130 + i * 54} ry={96 + i * 40}
+            stroke="currentColor" strokeWidth={i % 4 === 0 ? 2 : 1}
+            opacity={0.55 - i * 0.024} transform={`rotate(${-16 + i * 0.55} 940 120)`} />
+        ))}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <ellipse key={`b${i}`} cx={120} cy={760} rx={90 + i * 58} ry={70 + i * 44}
+            stroke="currentColor" strokeWidth={i % 3 === 0 ? 1.6 : 0.8}
+            opacity={0.34 - i * 0.026} transform={`rotate(${12 - i * 0.7} 120 760)`} />
+        ))}
+      </svg>
+
+      {/* sapuan kuas diagonal — tekstur cat air */}
+      <svg className="sh-brush" viewBox="0 0 1200 800" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="shBrushA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+            <stop offset="45%" stopColor="currentColor" stopOpacity=".5" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d="M-60 620 C 220 520, 380 700, 620 600 S 1040 470, 1280 560"
+          stroke="url(#shBrushA)" strokeWidth="90" strokeLinecap="round" opacity=".5" />
+        <path d="M-60 700 C 260 610, 420 780, 700 680 S 1080 560, 1280 640"
+          stroke="url(#shBrushA)" strokeWidth="34" strokeLinecap="round" opacity=".4" />
+        <path d="M-80 160 C 180 60, 420 210, 660 120 S 1080 -10, 1300 90"
+          stroke="url(#shBrushA)" strokeWidth="120" strokeLinecap="round" opacity=".28" />
+      </svg>
+
+      {/* titik-titik halus bergerak (bintang pelan) */}
+      <span className="sh-spark sh-spark--1" />
+      <span className="sh-spark sh-spark--2" />
+      <span className="sh-spark sh-spark--3" />
+
       <span className="sh-aurora__veil" />
     </div>
   );

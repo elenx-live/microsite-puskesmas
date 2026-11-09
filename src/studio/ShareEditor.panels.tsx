@@ -248,6 +248,7 @@ export const LayoutPanel: React.FC<{ cfg: ShareConfig; update: Upd }> = ({ cfg, 
     <Field label="Mode microsite">
       <Segmented value={cfg.micrositeMode} onChange={(v) => update((d) => { d.micrositeMode = v; })}
         options={[{ value: 'all', label: 'Semua' }, { value: 'selected', label: 'Pilih' }]} />
+      <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Daftar pilihan & urutan ada di panel <b>Section</b>.</p>
     </Field>
     <Field label="Lebar kontainer">
       <Segmented value={cfg.layout.container} cols={3} onChange={(v) => update((d) => { d.layout.container = v; })}
@@ -282,6 +283,9 @@ export const CardPanel: React.FC<{ cfg: ShareConfig; update: Upd; published: { i
   return (
     <div className="flex flex-col gap-3.5">
       <Head title="Kartu Microsite" desc="Bentuk, bayangan, dan isi kartu microsite." />
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-[11px] leading-relaxed text-slate-500">
+        Pemilihan & urutan microsite sekarang ada di panel <b>Section</b>.
+      </div>
       <Field label="Gaya">
         <Segmented value={c.style} cols={3} onChange={(v) => update((d) => { d.card.style = v; })}
           options={[{ value: 'elevated', label: 'Bayangan' }, { value: 'flat', label: 'Flat' }, { value: 'outline', label: 'Garis' }, { value: 'glass', label: 'Kaca' }, { value: 'gradient', label: 'Gradasi' }]} />
@@ -325,11 +329,69 @@ export const CardPanel: React.FC<{ cfg: ShareConfig; update: Upd; published: { i
 export const SectionsPanel: React.FC<{
   cfg: ShareConfig; update: Upd; moveSection: (i: number, d: -1 | 1) => void;
   addSection: (t: ShareSectionType) => void; removeSection: (id: string) => void;
-}> = ({ cfg, update, moveSection, addSection, removeSection }) => {
+  published?: { id: string; slug: string; name: string }[];
+}> = ({ cfg, update, moveSection, addSection, removeSection, published = [] }) => {
   const [adding, setAdding] = React.useState(false);
   return (
     <div className="flex flex-col gap-3">
-      <Head title="Section & Urutan" desc="Aktifkan, geser urutan, dan tambah bagian halaman." />
+      <Head title="Section & Urutan" desc="Aktifkan, geser urutan, hapus, dan tambah bagian halaman." />
+
+      {/* ── PILIH MICROSITE: fitur utama halaman Section ── */}
+      <div className="rounded-xl border border-slate-900/10 bg-slate-50/60 p-2.5">
+        <Field label="Microsite yang ditampilkan">
+          <Segmented value={cfg.micrositeMode} cols={2} onChange={(v) => update((d) => { d.micrositeMode = v; })}
+            options={[{ value: 'all', label: 'Semua' }, { value: 'selected', label: 'Pilih sendiri' }]} />
+        </Field>
+        {cfg.micrositeMode === 'selected' && (
+          <div className="mt-2 flex flex-col gap-1.5">
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              Klik untuk memilih. Angka = urutan tampil. {cfg.micrositeIds.length > 0
+                ? `${cfg.micrositeIds.length} dari ${published.length} dipilih.`
+                : 'Belum ada yang dipilih — halaman publik akan kosong.'}
+            </p>
+            {published.length === 0 && (
+              <p className="text-[11px] text-slate-400">Belum ada microsite terbit.</p>
+            )}
+            {published.map((m) => {
+              const idx = cfg.micrositeIds.indexOf(m.id);
+              const on = idx >= 0;
+              return (
+                <div key={m.id} className={`flex items-center gap-1 rounded-lg border px-2 py-1.5 text-[12px] ${on ? 'border-slate-900 bg-white' : 'border-slate-200 bg-white/60'}`}>
+                  <button onClick={() => update((d) => {
+                    const i = d.micrositeIds.indexOf(m.id);
+                    if (i >= 0) d.micrositeIds.splice(i, 1); else d.micrositeIds.push(m.id);
+                  })} className="flex flex-1 items-center gap-2 text-left">
+                    <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border ${on ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300'}`}>
+                      {on && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className={`truncate ${on ? 'font-bold text-slate-800' : 'font-medium text-slate-600'}`}>{m.name}</span>
+                  </button>
+                  {on && (
+                    <span className="flex shrink-0 items-center gap-1">
+                      <span className="rounded bg-slate-900 px-1.5 text-[10px] font-bold text-white">#{idx + 1}</span>
+                      <button disabled={idx === 0} title="Naikkan"
+                        onClick={() => update((d) => { const i = d.micrositeIds.indexOf(m.id); if (i > 0) { [d.micrositeIds[i - 1], d.micrositeIds[i]] = [d.micrositeIds[i], d.micrositeIds[i - 1]]; } })}
+                        className="grid h-5 w-5 place-items-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-25"><ArrowUpIcon /></button>
+                      <button disabled={idx === cfg.micrositeIds.length - 1} title="Turunkan"
+                        onClick={() => update((d) => { const i = d.micrositeIds.indexOf(m.id); if (i >= 0 && i < d.micrositeIds.length - 1) { [d.micrositeIds[i + 1], d.micrositeIds[i]] = [d.micrositeIds[i], d.micrositeIds[i + 1]]; } })}
+                        className="grid h-5 w-5 place-items-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-25"><ArrowDownIcon /></button>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {published.length > 1 && (
+              <div className="mt-1 flex gap-1.5">
+                <button onClick={() => update((d) => { d.micrositeIds = published.map((m) => m.id); })}
+                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:border-slate-400">Pilih semua</button>
+                <button onClick={() => update((d) => { d.micrositeIds = []; })}
+                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:border-slate-400">Kosongkan</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {cfg.sections.map((s, i) => (
         <div key={s.id} className={`rounded-xl border ${s.visible ? 'border-slate-200' : 'border-dashed border-slate-200 opacity-70'}`}>
           <div className="flex items-center gap-1 px-2.5 py-2">
@@ -338,9 +400,8 @@ export const SectionsPanel: React.FC<{
             <span className="flex-1 truncate text-[12.5px] font-bold text-slate-700">{SECTION_LABEL[s.type]}</span>
             <button onClick={() => moveSection(i, -1)} disabled={i === 0} className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-slate-100 disabled:opacity-30"><ArrowUpIcon /></button>
             <button onClick={() => moveSection(i, 1)} disabled={i === cfg.sections.length - 1} className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-slate-100 disabled:opacity-30"><ArrowDownIcon /></button>
-            {s.type !== 'hero' && s.type !== 'microsites' && s.type !== 'footer' && (
-              <button onClick={() => removeSection(s.id)} className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-500"><Trash2 className="h-3.5 w-3.5" /></button>
-            )}
+            <button onClick={() => removeSection(s.id)} title="Hapus section"
+              className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-500"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
           {['about', 'announcement', 'customText', 'profile', 'categories', 'gallery', 'social', 'contact'].includes(s.type) && (
             <details className="border-t border-slate-100 px-2.5 py-2">

@@ -361,7 +361,7 @@ export default function ShareEditor({ onExit, user, onNotify, dashboardId, dashb
           {panel === 'colors' && <ColorsPanel cfg={cfg} update={update} />}
           {panel === 'layout' && <LayoutPanel cfg={cfg} update={update} />}
           {panel === 'card' && <CardPanel cfg={cfg} update={update} published={published} />}
-          {panel === 'sections' && <SectionsPanel cfg={cfg} update={update} moveSection={moveSection} addSection={addSection} removeSection={removeSection} />}
+          {panel === 'sections' && <SectionsPanel cfg={cfg} update={update} moveSection={moveSection} addSection={addSection} removeSection={removeSection} published={published} />}
         </div>
 
         {/* ── Preview ── */}

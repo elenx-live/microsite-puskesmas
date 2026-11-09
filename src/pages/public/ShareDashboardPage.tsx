@@ -393,8 +393,11 @@ export default function ShareDashboardPage({ previewConfig, previewOwner, previe
           ...cssVars,
           background: 'transparent',
           color: 'var(--sh-text)',
-          minHeight: '100vh',
+          /* Preview di dalam editor tidak boleh memaksa tinggi 100vh,
+             karena latar absolute mengikuti tinggi wadah ini. */
+          minHeight: isPreview ? '100%' : '100vh',
           position: 'relative',
+          overflow: 'clip',
           isolation: 'isolate',
           fontFamily: 'var(--sh-font-body)',
           fontSize: 'var(--sh-base-size)',

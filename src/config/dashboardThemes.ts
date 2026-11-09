@@ -59,7 +59,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'minimalist',
     name: 'Aurora Bersih',
-    category: 'Modern Minimalist',
+    category: 'Minimal & Bersih',
     description: 'Bersih, lapang, banyak whitespace. Tipografi modern dengan aksen halus.',
     vibe: 'Whitespace luas',
     fonts: { display: "'Plus Jakarta Sans', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -76,7 +76,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'premium',
     name: 'Obsidian Luxe',
-    category: 'Premium & Elegant',
+    category: 'Elegan & Mewah',
     description: 'Tampilan mewah gelap dengan emas. Komposisi visual matang dan berkarakter.',
     vibe: 'Mewah & gelap',
     fonts: { display: "'Playfair Display', serif", body: "'Inter', system-ui, sans-serif" },
@@ -93,7 +93,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'gradient',
     name: 'Neon Flow',
-    category: 'Gradient & Futuristic',
+    category: 'Gelap & Dramatis',
     description: 'Gradien hidup, efek visual dinamis, nuansa futuristik kontemporer.',
     vibe: 'Gradien dinamis',
     fonts: { display: "'Space Grotesk', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -110,7 +110,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'corporate',
     name: 'Institusi Tegas',
-    category: 'Professional & Corporate',
+    category: 'Resmi & Institusi',
     description: 'Formal dan terstruktur. Kokoh untuk organisasi dan institusi.',
     vibe: 'Formal & tertata',
     fonts: { display: "'Plus Jakarta Sans', sans-serif", body: "'Inter', sans-serif" },
@@ -127,7 +127,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'creative',
     name: 'Pesta Warna',
-    category: 'Creative & Colorful',
+    category: 'Berani & Artistik',
     description: 'Ekspresif dan hidup. Kombinasi warna berani untuk personal branding.',
     vibe: 'Warna berani',
     fonts: { display: "'Fredoka', sans-serif", body: "'Nunito', 'Inter', system-ui, sans-serif" },
@@ -144,7 +144,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'editorial',
     name: 'Kabar Pagi',
-    category: 'Editorial & Magazine',
+    category: 'Elegan & Mewah',
     description: 'Layout majalah digital. Tipografi kuat, penekanan konten dan gambar.',
     vibe: 'Majalah digital',
     fonts: { display: "'Libre Baskerville', serif", body: "'Source Serif 4', Georgia, serif" },
@@ -161,7 +161,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'nature',
     name: 'Hutan Tenang',
-    category: 'Nature & Soft',
+    category: 'Tenang & Alami',
     description: 'Warna lembut dan natural. Nyaman dipandang, menenangkan.',
     vibe: 'Lembut natural',
     fonts: { display: "'Fraunces', serif", body: "'Inter', system-ui, sans-serif" },
@@ -178,7 +178,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'artistic',
     name: 'Kanvas Berani',
-    category: 'Bold & Artistic',
+    category: 'Berani & Artistik',
     description: 'Berani dengan karakter visual kuat. Komposisi tidak monoton.',
     vibe: 'Bold & artistik',
     fonts: { display: "'Archivo Black', sans-serif", body: "'Space Grotesk', system-ui, sans-serif" },
@@ -198,7 +198,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'midnight',
     name: 'Tengah Malam',
-    category: 'Dark & Elegant',
+    category: 'Elegan & Mewah',
     description: 'Gelap pekat dengan cahaya biru dingin. Cocok untuk portal layanan malam dan dashboard data.',
     vibe: 'Gelap elegan',
     fonts: { display: "'Playfair Display', serif", body: "'Inter', system-ui, sans-serif" },
@@ -215,7 +215,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'sunset',
     name: 'Senja Hangat',
-    category: 'Warm & Gradient',
+    category: 'Tenang & Alami',
     description: 'Gradien jingga ke merah muda seperti langit senja. Bersemangat namun tetap hangat.',
     vibe: 'Hangat bersemangat',
     fonts: { display: "'Fraunces', serif", body: "'Plus Jakarta Sans', system-ui, sans-serif" },
@@ -232,7 +232,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'ocean',
     name: 'Samudra Dalam',
-    category: 'Cool & Calm',
+    category: 'Tenang & Alami',
     description: 'Biru laut berlapis dengan nuansa tenang. Terasa profesional dan menenangkan.',
     vibe: 'Tenang profesional',
     fonts: { display: "'Space Grotesk', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -249,7 +249,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'terracotta',
     name: 'Tanah Liat',
-    category: 'Warm & Earthy',
+    category: 'Tenang & Alami',
     description: 'Nuansa tanah, bata, dan pasir. Hangat dan membumi dengan tipografi serif tegas.',
     vibe: 'Hangat membumi',
     fonts: { display: "'Fraunces', serif", body: "'Source Serif 4', Georgia, serif" },
@@ -266,7 +266,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'neon',
     name: 'Neon Kota',
-    category: 'Bold & Futuristic',
+    category: 'Berani & Artistik',
     description: 'Latar gelap dengan aksen neon magenta dan sian. Futuristik, cocok untuk portal teknologi.',
     vibe: 'Futuristik neon',
     fonts: { display: "'Space Grotesk', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -283,7 +283,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'botanical',
     name: 'Kebun Rimbun',
-    category: 'Nature & Soft',
+    category: 'Tenang & Alami',
     description: 'Hijau dedaunan dengan aksen kuning muda. Segar, ramah, dan penuh napas.',
     vibe: 'Segar organik',
     fonts: { display: "'Fraunces', serif", body: "'Plus Jakarta Sans', system-ui, sans-serif" },
@@ -300,7 +300,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'monochrome',
     name: 'Tinta Tebal',
-    category: 'Minimal & Sharp',
+    category: 'Minimal & Bersih',
     description: 'Putih bersih dengan blok hitam pekat dan satu aksen merah. Tegas, seperti poster cetak.',
     vibe: 'Tegas minimal',
     fonts: { display: "'Archivo Black', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -317,7 +317,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'aurora',
     name: 'Cahaya Utara',
-    category: 'Dark & Gradient',
+    category: 'Gelap & Dramatis',
     description: 'Gelap dengan pita cahaya hijau-ungu. Dramatis dan berkarakter kuat.',
     vibe: 'Dramatis bercahaya',
     fonts: { display: "'Space Grotesk', sans-serif", body: "'Inter', system-ui, sans-serif" },
@@ -334,7 +334,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'sakura',
     name: 'Sakura Lembut',
-    category: 'Soft & Pastel',
+    category: 'Minimal & Bersih',
     description: 'Merah muda pastel yang lembut dengan sentuhan ungu. Halus dan ramah untuk kegiatan ibu dan anak.',
     vibe: 'Lembut pastel',
     fonts: { display: "'Playfair Display', serif", body: "'Plus Jakarta Sans', system-ui, sans-serif" },
@@ -351,7 +351,7 @@ export const DASHBOARD_THEMES: ThemeDef[] = [
   {
     id: 'gouvernement',
     name: 'Dinas Resmi',
-    category: 'Institutional',
+    category: 'Resmi & Institusi',
     description: 'Biru dinas dan putih bersih, tata letak rapi. Untuk portal instansi dan layanan publik.',
     vibe: 'Resmi berwibawa',
     fonts: { display: "'Libre Baskerville', serif", body: "'Inter', system-ui, sans-serif" },
